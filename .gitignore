@@ -1,0 +1,61 @@
+# Compiled class files and build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven Wrapper runtime
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Log files
+*.log
+logs/
+
+# Environment and sensitive configuration
+*.env
+.env.*
+application-local.properties
+application-local.yml
+
+# Linux & OS artifacts
+.DS_Store
+*~
+*.swp
+*.swo
+.directory
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
