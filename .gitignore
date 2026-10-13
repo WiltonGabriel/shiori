@@ -15,25 +15,32 @@ target/
 *.log
 logs/
 
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
 # Environment and sensitive configuration
+.env
 *.env
 .env.*
 application-local.properties
 application-local.yml
+application-dev.properties
+application-dev.yml
 
-# Linux & OS artifacts
+# OS artifacts (Windows, macOS, Linux)
 .DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
 *~
 *.swp
 *.swo
 .directory
 
+# IDEs
 # VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/
 *.code-workspace
 
 # IntelliJ IDEA
