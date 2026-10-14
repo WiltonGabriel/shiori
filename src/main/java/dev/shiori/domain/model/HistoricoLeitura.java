@@ -1,5 +1,119 @@
 package dev.shiori.domain.model;
 
-public class HistoricoLeitura {
+import dev.shiori.domain.exception.RegraDeNegocioException;
 
+import java.time.LocalDate;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
+@Entity
+@Table(name = "tb_historico_leitura")
+public class HistoricoLeitura extends EntidadeBase {
+
+    @Column(nullable = false)
+    private Double capituloInicial;
+
+    @Column(nullable = false)
+    private Double capituloFinal;
+
+    @Column
+    private Double avaliacaoCiclo;
+
+    @Column(columnDefinition = "TEXT")
+    private String anotacoes;
+
+    @Column(nullable = false)
+    private LocalDate dataLeitura;
+
+    @ManyToOne
+    @JoinColumn(name = "obra_id", nullable = false)
+    private Obra obra;
+
+    protected HistoricoLeitura() {
+    }
+
+    public HistoricoLeitura(
+            Obra obra,
+            Double capituloInicial,
+            Double capituloFinal,
+            Double avaliacaoCiclo,
+            String anotacoes) {
+        if (obra == null) {
+            throw new RegraDeNegocioException("Obra é obrigatória");
+        }
+        if (capituloInicial == null) {
+            throw new RegraDeNegocioException("Capitulo inicial é obrigatório");
+        }
+        if (capituloFinal == null) {
+            throw new RegraDeNegocioException("Capitulo final é obrigatório");
+        }
+
+        if (capituloInicial < 0.0) {
+            throw new RegraDeNegocioException(
+                    "O capítulo inicial não pode ser negativo");
+        }
+
+        if (capituloFinal <= capituloInicial) {
+            throw new RegraDeNegocioException(
+                    "O capítulo final deve ser maior que o inicial");
+        }
+
+        if (avaliacaoCiclo != null && (avaliacaoCiclo < 0.0 || avaliacaoCiclo > 10.0)) {
+            throw new RegraDeNegocioException("A avaliação do ciclo deve estar entre 0 e 10");
+        }
+
+        this.capituloInicial = capituloInicial;
+        this.capituloFinal = capituloFinal;
+        this.avaliacaoCiclo = avaliacaoCiclo;
+        this.anotacoes = anotacoes;
+        this.obra = obra;
+        this.dataLeitura = LocalDate.now();
+    }
+
+    public Double calcularTamanhoCiclo() {
+        return this.capituloFinal - this.capituloInicial;
+    }
+
+    public boolean isCapituloUnico() {
+        return this.calcularTamanhoCiclo().equals(1.0);
+    }
+
+    public boolean isCicloEmAberto() {
+        return this.avaliacaoCiclo == null && (this.anotacoes == null || this.anotacoes.isBlank());
+    }
+
+    public void estenderCicloAte(Double novoCapituloFinal) {
+        if (novoCapituloFinal == null || novoCapituloFinal <= this.capituloFinal) {
+            throw new RegraDeNegocioException("O novo capítulo final deve ser maior que o atual");
+        }
+        this.capituloFinal = novoCapituloFinal;
+        this.dataLeitura = LocalDate.now();
+    }
+
+    public Double getCapituloInicial() {
+        return capituloInicial;
+    }
+
+    public Double getCapituloFinal() {
+        return capituloFinal;
+    }
+
+    public Double getAvaliacaoCiclo() {
+        return avaliacaoCiclo;
+    }
+
+    public String getAnotacoes() {
+        return anotacoes;
+    }
+
+    public LocalDate getDataLeitura() {
+        return dataLeitura;
+    }
+
+    public Obra getObra() {
+        return obra;
+    }
 }
