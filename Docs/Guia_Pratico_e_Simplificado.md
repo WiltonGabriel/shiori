@@ -66,7 +66,7 @@ Imagine que uma Classe é uma ficha de controle de leitura:
 
 #### Arquivo 1.1: `StatusObra.java`
 * **Tipo:** `public enum StatusObra`
-* **Constantes:** `ANUNCIADO` (ou `PREVISTO`), `ANDAMENTO`, `FINALIZADO`, `HIATO`, `CANCELADO`.
+* **Constantes:** `PREVISTO`, `ANDAMENTO`, `FINALIZADO`, `HIATO`, `CANCELADO`.
 
 #### Arquivo 1.2: `StatusLeitura.java`
 * **Tipo:** `public enum StatusLeitura`
