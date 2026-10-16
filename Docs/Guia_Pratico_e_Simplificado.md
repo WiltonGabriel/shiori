@@ -139,10 +139,11 @@ Imagine que uma Classe é uma ficha de controle de leitura:
 * **Métodos de Regra de Negócio:**
   * `registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes)`:
     * Valida se `capituloAtingido > progressoAtual` e se `nota` (quando presente) está entre 0.0 e 10.0.
-    * Se sem nota e sem anotação e último ciclo estiver aberto: estende o último ciclo.
+    * Valida se para registrar anotações é obrigatório atribuir uma nota (`anotacoes != null && !anotacoes.isBlank() && nota == null`).
+    * Se sem nota e último ciclo estiver aberto: estende o último ciclo.
     * Senão: cria novo `HistoricoLeitura` e adiciona à lista.
     * Atualiza `progressoAtual` e recalcula `mediaAvaliacaoCiclos`.
-  * `calcularMediaAvCiclo()`: calcula média ponderada ou retorna `null`.
+  * `calcularMediaAvaliacaoCiclos()`: calcula média ponderada das notas dos ciclos pelo tamanho ou retorna `null`.
   * `atualizarDadosLeitura(StatusLeitura novoStatus, Double novaAvaliacaoPessoal)`: atualiza se não nulos, validando nota entre 0 e 10.
   * Getters (sendo `getHistoricos()` com `Collections.unmodifiableList`).
 

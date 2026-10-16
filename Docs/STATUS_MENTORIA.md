@@ -28,25 +28,24 @@ Documento vivo de sincronização de estado, diretrizes pedagógicas e históric
 * **Arquivo Atual:** `src/main/java/dev/shiori/domain/model/Obra.java`
 * **O que já foi feito na classe `Obra`:**
   * Herança de `EntidadeBase`, anotações `@Entity` e `@Table(name = "tb_obra")`.
-  * Declaração completa dos 11 atributos de estado (metadados e registros do leitor), incluindo a inicialização de `progressoAtual = 0.0` e o relacionamento `@OneToMany` com `List<HistoricoLeitura>`.
+  * Declaração completa dos atributos de estado e relacionamento `@OneToMany` com `List<HistoricoLeitura> historicosLeitura`.
   * Construtor protegido `protected Obra() {}` para o JPA.
-  * Construtor público de negócio validando `tituloPrincipal` não vazio, atribuindo padrão `StatusLeitura.LENDO` se nulo e validando intervalo de `avaliacaoPessoal [0.0, 10.0]`.
-  * Início da implementação do método de negócio `registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes)`.
+  * Construtor público de negócio validando invariantes.
+  * Implementação completa do método de negócio `registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes)`:
+    * Validação de capítulo atingido maior que o progresso atual e não nulo.
+    * Validação de nota entre 0 e 10 (quando informada).
+    * Nova regra de domínio consolidada: para registrar anotação, é obrigatório atribuir nota.
+    * Lógica do Ciclo Elástico: estende o último ciclo se a nota for nula e ele estiver em aberto; caso contrário, cria novo `HistoricoLeitura`.
+    * Atualização final de `progressoAtual = capituloAtingido`.
+  * Implementação completa do método `public Double calcularMediaAvaliacaoCiclos()` com cálculo de média ponderada pelas extensões dos ciclos avaliados, retornando `null` quando não houver notas.
 * **Ajustes e Pontos Pendentes para a Próxima Sessão em `Obra.java`:**
-  1. No método `registrarCicloLeitura`:
-     * Trocar a condição do `capituloAtingido` para usar operador ou (`||`): `if (capituloAtingido == null || capituloAtingido <= this.progressoAtual)`.
-     * Ajustar a mensagem de erro da nota (remover *"não pode ser nulo"*, pois nota é opcional).
-     * Remover o `if` que lança exceção para `anotacoes.isBlank()` (anotações também são opcionais).
-     * Substituir `if (this.historicoLeitura != null)` pela verificação se a lista possui elementos: `!this.historicoLeitura.isEmpty()`.
-     * Implementar a decisão do Ciclo Elástico: se a lista não estiver vazia, o avanço for silencioso (`nota == null` e `anotacoes == null || anotacoes.isBlank()`) e o último ciclo estiver em aberto (`ultimo.isCicloEmAberto()`), chamar `ultimo.estenderCicloAte(capituloAtingido)`. Senão (`else`), instanciar `new HistoricoLeitura(...)` e adicionar à lista.
-     * Atualizar `this.progressoAtual = capituloAtingido;` e `this.mediaAvaliacaoCiclos = this.calcularMediaAvCiclo();`.
-  2. Implementar `public Double calcularMediaAvCiclo()` (fórmula da média ponderada das extensões dos ciclos com nota).
-  3. Implementar `public void atualizarDadosLeitura(StatusLeitura novoStatus, Double novaAvaliacaoPessoal)`.
-  4. Implementar os Getters da classe, protegendo `getHistoricos()` com `Collections.unmodifiableList(...)`.
-  5. (Opcional/Recomendado): Renomear o atributo `historicoLeitura` para o plural `historicos`.
+  1. No método `registrarCicloLeitura`: adicionar a chamada `this.mediaAvaliacaoCiclos = this.calcularMediaAvaliacaoCiclos();` logo abaixo de `this.progressoAtual = capituloAtingido;` para manter a nota oculta do olhinho sempre atualizada.
+  2. Implementar `public void atualizarDadosLeitura(StatusLeitura novoStatus, Double novaAvaliacaoPessoal)`.
+  3. Implementar os Getters da classe, protegendo `getHistoricosLeitura()` com `Collections.unmodifiableList(...)`.
+  4. Seguir para o pacote `dev.shiori.dto` (criação dos DTOs com `record`).
 
 ### 3. Próximo Passo Imediato
-A IA mentora deve orientar o dev na retomada do método `registrarCicloLeitura` dentro de `Obra.java`, refinando as validações iniciais e guiando a lógica do Ciclo Elástico (`if/else` entre esticar ciclo vs criar novo histórico).
+A IA mentora deve orientar o dev a adicionar a atualização de `this.mediaAvaliacaoCiclos` dentro de `registrarCicloLeitura`, implementar o método `atualizarDadosLeitura` e fechar a classe `Obra.java` com seus Getters encapsulados.
 
 ---
 

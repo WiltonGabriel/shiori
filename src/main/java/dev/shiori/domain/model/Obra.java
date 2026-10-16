@@ -36,7 +36,7 @@ public class Obra extends EntidadeBase {
     private Double mediaAvaliacaoCiclos;
 
     @OneToMany(mappedBy = "obra", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<HistoricoLeitura> historicoLeitura = new ArrayList<>();
+    private List<HistoricoLeitura> historicosLeitura = new ArrayList<>();
 
     protected Obra() {
     }
@@ -74,18 +74,50 @@ public class Obra extends EntidadeBase {
     }
 
     public void registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes) {
-        if (capituloAtingido != null && capituloAtingido <= this.progressoAtual) {
+
+        if (capituloAtingido == null || capituloAtingido <= this.progressoAtual) {
             throw new RegraDeNegocioException("O capítulo atingido deve ser maior que o progresso atual e não nulo");
         }
-        if (nota != null && (nota > 10 || nota < 0)) {
-            throw new RegraDeNegocioException("A avaliação do ciclo deve estar entre 0 e 10 e não pode ser nulo");
-        }
-        if (anotacoes != null && anotacoes.isBlank()) {
-            throw new RegraDeNegocioException("A anotação do ciclo não pode ser nulo");
-        }
-        if (this.historicoLeitura != null) {
 
+        if (nota != null && (nota > 10 || nota < 0)) {
+            throw new RegraDeNegocioException("A nota deve estar entre 0 e 10");
         }
+
+        if (anotacoes != null && (!anotacoes.isBlank() && nota == null)) {
+            throw new RegraDeNegocioException("Para registrar uma anotação no ciclo, é obrigatório atribuir uma nota.");
+        }
+
+        if (this.historicosLeitura.isEmpty()) {
+            this.historicosLeitura
+                    .add(new HistoricoLeitura(this, this.progressoAtual, capituloAtingido, nota, anotacoes));
+        } else {
+            HistoricoLeitura ultimoCiclo = this.historicosLeitura.get(this.historicosLeitura.size() - 1);
+            if (nota == null && ultimoCiclo.isCicloEmAberto()) {
+                ultimoCiclo.estenderCicloAte(capituloAtingido);
+            } else {
+                this.historicosLeitura
+                        .add(new HistoricoLeitura(this, this.progressoAtual, capituloAtingido, nota, anotacoes));
+            }
+        }
+        this.progressoAtual = capituloAtingido;
 
     }
+
+    public Double calcularMediaAvaliacaoCiclos() {
+        double somaNotasVezesTamanho = 0.0;
+        double somaTamanhosAvaliados = 0.0;
+
+        for (HistoricoLeitura h : this.historicosLeitura) {
+            if (h.getAvaliacaoCiclo() != null) {
+                somaNotasVezesTamanho += h.getAvaliacaoCiclo() * h.calcularTamanhoCiclo();
+                somaTamanhosAvaliados += h.calcularTamanhoCiclo();
+            }
+        }
+        if (somaTamanhosAvaliados == 0.0) {
+            return null;
+        }
+
+        return somaNotasVezesTamanho / somaTamanhosAvaliados;
+    }
+
 }
