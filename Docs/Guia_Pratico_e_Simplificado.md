@@ -135,10 +135,10 @@ Imagine que uma Classe é uma ficha de controle de leitura:
   11. `private List<HistoricoLeitura> historicos = new ArrayList<>();` (`@OneToMany(mappedBy = "obra", cascade = CascadeType.ALL, orphanRemoval = true)`)
 * **Construtores:**
   * `protected Obra()`: vazio para JPA.
-  * `public Obra(...)`: valida `tituloPrincipal` não vazio, zera `progressoAtual = 0.0`, define `statusLeitura = StatusLeitura.LENDO` se vier nulo, inicializa lista de históricos.
+  * `public Obra(...)`: valida `tituloPrincipal` não vazio, zera `progressoAtual = 0.0`, define `statusLeitura = StatusLeitura.LENDO` se vier nulo, valida `avaliacaoPessoal` entre 0.0 e 10.0 se informada, inicializa lista de históricos.
 * **Métodos de Regra de Negócio:**
   * `registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes)`:
-    * Valida se `capituloAtingido > progressoAtual`.
+    * Valida se `capituloAtingido > progressoAtual` e se `nota` (quando presente) está entre 0.0 e 10.0.
     * Se sem nota e sem anotação e último ciclo estiver aberto: estende o último ciclo.
     * Senão: cria novo `HistoricoLeitura` e adiciona à lista.
     * Atualiza `progressoAtual` e recalcula `mediaAvaliacaoCiclos`.

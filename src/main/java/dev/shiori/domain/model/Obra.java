@@ -73,4 +73,19 @@ public class Obra extends EntidadeBase {
         this.avaliacaoPessoal = avaliacaoPessoal;
     }
 
+    public void registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes) {
+        if (capituloAtingido != null && capituloAtingido <= this.progressoAtual) {
+            throw new RegraDeNegocioException("O capítulo atingido deve ser maior que o progresso atual e não nulo");
+        }
+        if (nota != null && (nota > 10 || nota < 0)) {
+            throw new RegraDeNegocioException("A avaliação do ciclo deve estar entre 0 e 10 e não pode ser nulo");
+        }
+        if (anotacoes != null && anotacoes.isBlank()) {
+            throw new RegraDeNegocioException("A anotação do ciclo não pode ser nulo");
+        }
+        if (this.historicoLeitura != null) {
+
+        }
+
+    }
 }
