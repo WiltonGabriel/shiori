@@ -23,29 +23,19 @@ Documento vivo de sincronização de estado, diretrizes pedagógicas e históric
 * `src/main/java/dev/shiori/domain/exception/RegraDeNegocioException.java`: Exceção unchecked para validações de regras de negócio.
 * `src/main/java/dev/shiori/domain/model/EntidadeBase.java`: `@MappedSuperclass` abstrata com `id`, `@GeneratedValue`, `equals` e `hashCode` baseados no identificador.
 * `src/main/java/dev/shiori/domain/model/HistoricoLeitura.java`: Entidade de domínio mapeada para `tb_historico_leitura`, com construtor protegido, construtor de negócio com validação de invariantes, cálculo de extensão de ciclo, identificação de capítulo único, detecção de ciclo em aberto e extensão dinâmica de capítulo final.
+* `src/main/java/dev/shiori/domain/model/Obra.java`: Entidade de domínio mapeada para `tb_obra`, herda de `EntidadeBase`, construtores JPA e de negócio com validação de invariantes, método `registrarCicloLeitura` com suporte a ciclo elástico e anotações atreladas à nota, cálculo de média ponderada dos ciclos `calcularMediaAvaliacaoCiclos`, atualização de status e nota pessoal `atualizarDadosLeitura`, e todos os Getters com coleção protegida por `Collections.unmodifiableList`.
 
 ### 2. Onde Parei Exatamente (WIP)
-* **Arquivo Atual:** `src/main/java/dev/shiori/domain/model/Obra.java`
-* **O que já foi feito na classe `Obra`:**
-  * Herança de `EntidadeBase`, anotações `@Entity` e `@Table(name = "tb_obra")`.
-  * Declaração completa dos atributos de estado e relacionamento `@OneToMany` com `List<HistoricoLeitura> historicosLeitura`.
-  * Construtor protegido `protected Obra() {}` para o JPA.
-  * Construtor público de negócio validando invariantes.
-  * Implementação completa do método de negócio `registrarCicloLeitura(Double capituloAtingido, Double nota, String anotacoes)`:
-    * Validação de capítulo atingido maior que o progresso atual e não nulo.
-    * Validação de nota entre 0 e 10 (quando informada).
-    * Nova regra de domínio consolidada: para registrar anotação, é obrigatório atribuir nota.
-    * Lógica do Ciclo Elástico: estende o último ciclo se a nota for nula e ele estiver em aberto; caso contrário, cria novo `HistoricoLeitura`.
-    * Atualização final de `progressoAtual = capituloAtingido`.
-  * Implementação completa do método `public Double calcularMediaAvaliacaoCiclos()` com cálculo de média ponderada pelas extensões dos ciclos avaliados, retornando `null` quando não houver notas.
-* **Ajustes e Pontos Pendentes para a Próxima Sessão em `Obra.java`:**
-  1. No método `registrarCicloLeitura`: adicionar a chamada `this.mediaAvaliacaoCiclos = this.calcularMediaAvaliacaoCiclos();` logo abaixo de `this.progressoAtual = capituloAtingido;` para manter a nota oculta do olhinho sempre atualizada.
-  2. Implementar `public void atualizarDadosLeitura(StatusLeitura novoStatus, Double novaAvaliacaoPessoal)`.
-  3. Implementar os Getters da classe, protegendo `getHistoricosLeitura()` com `Collections.unmodifiableList(...)`.
-  4. Seguir para o pacote `dev.shiori.dto` (criação dos DTOs com `record`).
+* **Próximo Pacote:** `dev.shiori.dto`
+* **Arquivos a implementar:**
+  1. `ObraCadastroRequest.java` (record com dados de entrada para criação da obra).
+  2. `NovoCicloRequest.java` (record para registro de novo ciclo: `capituloAtingido`, `nota`, `anotacoes`).
+  3. `AtualizarLeituraRequest.java` (record para atualização de status e avaliação pessoal).
+  4. `HistoricoCicloResponse.java` (record com dados do ciclo para a API, incluindo construtor que converte de `HistoricoLeitura`).
+  5. `ObraResponse.java` (record com dados completos da obra e lista de históricos convertidos).
 
 ### 3. Próximo Passo Imediato
-A IA mentora deve orientar o dev a adicionar a atualização de `this.mediaAvaliacaoCiclos` dentro de `registrarCicloLeitura`, implementar o método `atualizarDadosLeitura` e fechar a classe `Obra.java` com seus Getters encapsulados.
+A IA mentora deve guiar o desenvolvedor na criação e estruturação dos 5 DTOs do pacote `dev.shiori.dto` utilizando `record` do Java 21+, explicando o papel dos DTOs como fronteira do sistema e a diferença entre DTOs de entrada (Request) e saída (Response).
 
 ---
 

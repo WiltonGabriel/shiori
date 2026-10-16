@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 
 import dev.shiori.domain.enums.StatusLeitura;
 import dev.shiori.domain.enums.StatusObra;
-import dev.shiori.domain.exception.RecursoNaoEncontradoException;
 import dev.shiori.domain.exception.RegraDeNegocioException;
 
 @Entity
@@ -100,6 +99,7 @@ public class Obra extends EntidadeBase {
             }
         }
         this.progressoAtual = capituloAtingido;
+        this.mediaAvaliacaoCiclos = this.calcularMediaAvaliacaoCiclos();
 
     }
 
@@ -118,6 +118,61 @@ public class Obra extends EntidadeBase {
         }
 
         return somaNotasVezesTamanho / somaTamanhosAvaliados;
+    }
+
+    public void atualizarDadosLeitura(StatusLeitura novoStatus, Double novaAvaliacaoPessoa) {
+        if (novoStatus != null) {
+            this.statusLeitura = novoStatus;
+        }
+        if (novaAvaliacaoPessoa != null) {
+            if (novaAvaliacaoPessoa < 0 || novaAvaliacaoPessoa > 10)
+                throw new RegraDeNegocioException("A avaliação pessoal deve estar entre 0 e 10");
+            this.avaliacaoPessoal = novaAvaliacaoPessoa;
+        }
+    }
+
+    public String getTituloPrincipal() {
+        return tituloPrincipal;
+    }
+
+    public String getTituloOriginal() {
+        return tituloOriginal;
+    }
+
+    public String getCapaUrl() {
+        return capaUrl;
+    }
+
+    public String getSinopse() {
+        return sinopse;
+    }
+
+    public Double getNotaGeral() {
+        return notaGeral;
+    }
+
+    public StatusObra getStatusObra() {
+        return statusObra;
+    }
+
+    public StatusLeitura getStatusLeitura() {
+        return statusLeitura;
+    }
+
+    public Double getProgressoAtual() {
+        return progressoAtual;
+    }
+
+    public Double getAvaliacaoPessoal() {
+        return avaliacaoPessoal;
+    }
+
+    public Double getMediaAvaliacaoCiclos() {
+        return mediaAvaliacaoCiclos;
+    }
+
+    public List<HistoricoLeitura> getHistoricosLeitura() {
+        return Collections.unmodifiableList(this.historicosLeitura);
     }
 
 }
