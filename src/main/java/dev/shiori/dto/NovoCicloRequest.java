@@ -1,5 +1,7 @@
 package dev.shiori.dto;
 
-public class NovoCicloRequest {
-
+public record NovoCicloRequest(
+        Double capituloAtingido,
+        Double nota,
+        String anotacoes) {
 }

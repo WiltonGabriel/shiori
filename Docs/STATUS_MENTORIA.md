@@ -24,18 +24,20 @@ Documento vivo de sincronização de estado, diretrizes pedagógicas e históric
 * `src/main/java/dev/shiori/domain/model/EntidadeBase.java`: `@MappedSuperclass` abstrata com `id`, `@GeneratedValue`, `equals` e `hashCode` baseados no identificador.
 * `src/main/java/dev/shiori/domain/model/HistoricoLeitura.java`: Entidade de domínio mapeada para `tb_historico_leitura`, com construtor protegido, construtor de negócio com validação de invariantes, cálculo de extensão de ciclo, identificação de capítulo único, detecção de ciclo em aberto e extensão dinâmica de capítulo final.
 * `src/main/java/dev/shiori/domain/model/Obra.java`: Entidade de domínio mapeada para `tb_obra`, herda de `EntidadeBase`, construtores JPA e de negócio com validação de invariantes, método `registrarCicloLeitura` com suporte a ciclo elástico e anotações atreladas à nota, cálculo de média ponderada dos ciclos `calcularMediaAvaliacaoCiclos`, atualização de status e nota pessoal `atualizarDadosLeitura`, e todos os Getters com coleção protegida por `Collections.unmodifiableList`.
+* `src/main/java/dev/shiori/dto/ObraCadastroRequest.java`: DTO record de entrada para cadastro com todos os metadados da obra.
+* `src/main/java/dev/shiori/dto/NovoCicloRequest.java`: DTO record de entrada para registro de ciclo de leitura (`capituloAtingido`, `nota`, `anotacoes`).
+* `src/main/java/dev/shiori/dto/AtualizarLeituraRequest.java`: DTO record de entrada para atualização de status de leitura e nota pessoal.
+* `src/main/java/dev/shiori/dto/HistoricoCicloResponse.java`: DTO record de saída com fábrica estática `fromEntity` para mapeamento seguro dos ciclos.
+* `src/main/java/dev/shiori/dto/ObraResponse.java`: DTO record de saída completo com fábrica estática `fromEntity` e conversão de ciclos via Stream/map para proteger o domínio e evitar recursão circular.
 
 ### 2. Onde Parei Exatamente (WIP)
-* **Próximo Pacote:** `dev.shiori.dto`
-* **Arquivos a implementar:**
-  1. `ObraCadastroRequest.java` (record com dados de entrada para criação da obra).
-  2. `NovoCicloRequest.java` (record para registro de novo ciclo: `capituloAtingido`, `nota`, `anotacoes`).
-  3. `AtualizarLeituraRequest.java` (record para atualização de status e avaliação pessoal).
-  4. `HistoricoCicloResponse.java` (record com dados do ciclo para a API, incluindo construtor que converte de `HistoricoLeitura`).
-  5. `ObraResponse.java` (record com dados completos da obra e lista de históricos convertidos).
+* **Próximo Pacote:** `dev.shiori.repository`
+* **Arquivo a implementar:** `src/main/java/dev/shiori/repository/ObraRepository.java`
+  * Interface Spring Data JPA estendendo `JpaRepository<Obra, Long>`.
+  * Método derivado de consulta: `List<Obra> findByStatusLeitura(StatusLeitura statusLeitura);`.
 
 ### 3. Próximo Passo Imediato
-A IA mentora deve guiar o desenvolvedor na criação e estruturação dos 5 DTOs do pacote `dev.shiori.dto` utilizando `record` do Java 21+, explicando o papel dos DTOs como fronteira do sistema e a diferença entre DTOs de entrada (Request) e saída (Response).
+A IA mentora deve guiar o desenvolvedor na criação da interface `ObraRepository.java` no pacote `dev.shiori.repository`, explicando o poder das Spring Data Interfaces e como queries derivadas funcionam por convenção de nomenclatura sem precisar escrever SQL na mão.
 
 ---
 
