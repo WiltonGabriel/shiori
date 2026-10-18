@@ -3,7 +3,6 @@ package dev.shiori.dto;
 import java.util.List;
 import dev.shiori.domain.enums.StatusLeitura;
 import dev.shiori.domain.enums.StatusObra;
-import dev.shiori.domain.model.HistoricoLeitura;
 import dev.shiori.domain.model.Obra;
 
 public record ObraResponse(Long id, String tituloPrincipal, String tituloOriginal, String capaUrl,
