@@ -95,5 +95,8 @@ public class AdminBootstrapRunner implements ApplicationRunner {
         if (!provedorIntegracaoRepository.existsByCodigoIgnoreCase("MANGADEX")) {
             provedorIntegracaoRepository.save(new ProvedorIntegracao("MANGADEX", "MangaDex API v5", "https://api.mangadex.org", null, 15000L));
         }
+        if (!provedorIntegracaoRepository.existsByCodigoIgnoreCase("OPENLIBRARY")) {
+            provedorIntegracaoRepository.save(new ProvedorIntegracao("OPENLIBRARY", "Open Library API", "https://openlibrary.org", null, 20000L));
+        }
     }
 }

@@ -30,7 +30,7 @@ class TagModeracaoTest {
                 null,
                 "Sinopse da obra...",
                 26,
-                TipoObra.NOVEL
+                TipoObra.LIGHT_NOVEL
         );
 
         tagIsekai = new Tag("Isekai", 1L);

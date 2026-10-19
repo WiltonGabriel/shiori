@@ -74,6 +74,18 @@ public class UsuarioController {
         return ResponseEntity.ok(perfil);
     }
 
+    @PutMapping("/me/preferencias-formatos")
+    public ResponseEntity<UsuarioPerfilResponse> atualizarPreferenciasFormatos(
+            @CurrentUser UsuarioPrincipal usuarioLogado,
+            @Valid @RequestBody dev.shiori.dto.usuario.AtualizarFormatosPreferidosRequest request) {
+        if (usuarioLogado == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UsuarioPerfilResponse perfil = usuarioService.atualizarFormatosPreferidos(usuarioLogado.getId(), request.formatosPreferidos());
+        return ResponseEntity.ok(perfil);
+    }
+
     @PutMapping("/me/perfil")
     public ResponseEntity<UsuarioPerfilResponse> atualizarPerfil(
             @CurrentUser UsuarioPrincipal usuarioLogado,

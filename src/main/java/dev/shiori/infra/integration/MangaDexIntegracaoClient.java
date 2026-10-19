@@ -24,6 +24,7 @@ public class MangaDexIntegracaoClient implements ClienteIntegracaoExterna {
         config.registrarRequisicao();
         log.info("INTEGRACAO_MANGADEX: Consultando obra por UUID {} na URL {}", idExterno, config.getUrlBase());
         return new IntegracaoMetadadosObra(
+                CODIGO,
                 idExterno,
                 "Título MangaDex #" + idExterno,
                 "Original Title MangaDex",
@@ -43,6 +44,7 @@ public class MangaDexIntegracaoClient implements ClienteIntegracaoExterna {
         log.info("INTEGRACAO_MANGADEX: Pesquisando obras pelo termo '{}' (limite: {})", termo, limite);
         return List.of(
                 new IntegracaoMetadadosObra(
+                        CODIGO,
                         "202",
                         termo + " - MangaDex Edition",
                         termo + " Raw",

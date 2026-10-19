@@ -193,6 +193,14 @@ public class AdminCuradoriaService {
         return GeneroResponse.deEntidade(generoSalvo);
     }
 
+    @Transactional(readOnly = true)
+    public List<GeneroResponse> listarGeneros(Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        return generoRepository.findAll().stream()
+                .map(GeneroResponse::deEntidade)
+                .toList();
+    }
+
     public MesclarTagsResponse mesclarTags(MesclarTagsRequest request, Long adminId) {
         Usuario admin = auditoriaService.obterEValidarAdmin(adminId);
 

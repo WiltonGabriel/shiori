@@ -1,5 +1,9 @@
 package dev.shiori.dto.auth;
 
+import java.util.Set;
+
+import dev.shiori.domain.enums.TipoObra;
+
 public record AuthResponse(
         String token,
         String tipo,
@@ -7,7 +11,8 @@ public record AuthResponse(
         String email,
         String apelido,
         String role,
-        boolean onboardingConcluido
+        boolean onboardingConcluido,
+        Set<TipoObra> formatosPreferidos
 ) {
     public static AuthResponse of(
             String token,
@@ -15,7 +20,8 @@ public record AuthResponse(
             String email,
             String apelido,
             String role,
-            boolean onboardingConcluido) {
+            boolean onboardingConcluido,
+            Set<TipoObra> formatosPreferidos) {
         return new AuthResponse(
                 token,
                 "Bearer",
@@ -23,6 +29,17 @@ public record AuthResponse(
                 email,
                 apelido,
                 role,
-                onboardingConcluido);
+                onboardingConcluido,
+                formatosPreferidos);
+    }
+
+    public static AuthResponse of(
+            String token,
+            Long usuarioId,
+            String email,
+            String apelido,
+            String role,
+            boolean onboardingConcluido) {
+        return of(token, usuarioId, email, apelido, role, onboardingConcluido, null);
     }
 }

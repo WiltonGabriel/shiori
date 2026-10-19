@@ -1,7 +1,9 @@
 package dev.shiori.dto.usuario;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
+import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.model.Usuario;
 
 public record UsuarioPerfilResponse(
@@ -15,6 +17,7 @@ public record UsuarioPerfilResponse(
         Integer pontosConfianca,
         boolean onboardingConcluido,
         boolean ativo,
+        Set<TipoObra> formatosPreferidos,
         LocalDateTime dataCriacao,
         LocalDateTime ultimaAtualizacao
 ) {
@@ -31,6 +34,7 @@ public record UsuarioPerfilResponse(
                 usuario.getPontosConfianca(),
                 usuario.isOnboardingConcluido(),
                 usuario.isAtivo(),
+                usuario.getFormatosPreferidos(),
                 usuario.getDataCriacao(),
                 usuario.getUltimaAtualizacao()
         );

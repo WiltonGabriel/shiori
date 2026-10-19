@@ -13,6 +13,7 @@ public record AdminUsuarioResponse(
         Role role,
         boolean ativo,
         Integer pontosConfianca,
+        Integer strikes,
         LocalDateTime dataCriacao,
         LocalDateTime ultimaAtualizacao
 ) {
@@ -25,6 +26,7 @@ public record AdminUsuarioResponse(
                 u.getRole(),
                 u.isAtivo(),
                 u.getPontosConfianca(),
+                u.getStrikes(),
                 u.getDataCriacao(),
                 u.getUltimaAtualizacao()
         );

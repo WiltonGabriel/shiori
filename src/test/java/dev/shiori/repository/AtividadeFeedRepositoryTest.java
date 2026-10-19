@@ -70,6 +70,7 @@ class AtividadeFeedRepositoryTest {
     @DisplayName("Deve buscar atividades do perfil do usuário em ordem cronológica reversa")
     void deveBuscarAtividadesDoUsuario() {
         AtividadeFeed a1 = AtividadeFeed.registrarInicioLeitura(userA, obra, item);
+        a1.setDataCriacao(java.time.LocalDateTime.now().minusHours(1));
         AtividadeFeed a2 = AtividadeFeed.registrarConclusao(userA, obra, item);
         atividadeFeedRepository.save(a1);
         atividadeFeedRepository.save(a2);

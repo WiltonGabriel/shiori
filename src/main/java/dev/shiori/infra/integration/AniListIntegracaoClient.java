@@ -24,6 +24,7 @@ public class AniListIntegracaoClient implements ClienteIntegracaoExterna {
         config.registrarRequisicao();
         log.info("INTEGRACAO_ANILIST: Consultando obra por ID externo {} na URL {}", idExterno, config.getUrlBase());
         return new IntegracaoMetadadosObra(
+                CODIGO,
                 idExterno,
                 "Título AniList #" + idExterno,
                 "Original Title AniList",
@@ -43,6 +44,7 @@ public class AniListIntegracaoClient implements ClienteIntegracaoExterna {
         log.info("INTEGRACAO_ANILIST: Pesquisando obras pelo termo '{}' (limite: {})", termo, limite);
         return List.of(
                 new IntegracaoMetadadosObra(
+                        CODIGO,
                         "101",
                         termo + " - Obra AniList",
                         termo + " Original",

@@ -105,9 +105,21 @@ public class UsuarioService {
                     throw new RegraDeNegocioException("O apelido '" + request.apelido() + "' já está em uso por outro usuário.");
                 });
 
-        usuario.concluirOnboarding(request.apelido(), request.fusoHorario(), request.fotoUrl(), request.descricao());
+        if (request.formatosPreferidos() != null && !request.formatosPreferidos().isEmpty()) {
+            usuario.concluirOnboarding(request.apelido(), request.fusoHorario(), request.fotoUrl(), request.descricao(), request.formatosPreferidos());
+        } else {
+            usuario.concluirOnboarding(request.apelido(), request.fusoHorario(), request.fotoUrl(), request.descricao());
+        }
         usuarioRepository.save(usuario);
 
+        return UsuarioPerfilResponse.aPartirDe(usuario);
+    }
+
+    @Transactional
+    public UsuarioPerfilResponse atualizarFormatosPreferidos(Long usuarioId, java.util.Set<dev.shiori.domain.enums.TipoObra> formatos) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+        usuario.atualizarFormatosPreferidos(formatos);
+        usuarioRepository.save(usuario);
         return UsuarioPerfilResponse.aPartirDe(usuario);
     }
 

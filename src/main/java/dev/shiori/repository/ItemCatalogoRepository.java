@@ -26,6 +26,9 @@ public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Long
     Page<ItemCatalogo> findByUsuarioId(Long usuarioId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"obra"})
+    Page<ItemCatalogo> findByUsuarioIdAndObraTipoObraIn(Long usuarioId, Collection<dev.shiori.domain.enums.TipoObra> tipos, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"obra"})
     Page<ItemCatalogo> findByUsuarioIdAndStatusLeitura(Long usuarioId, StatusLeitura statusLeitura, Pageable pageable);
 
     @EntityGraph(attributePaths = {"obra"})

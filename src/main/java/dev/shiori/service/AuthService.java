@@ -59,7 +59,8 @@ public class AuthService {
                 usuario.getEmail(),
                 usuario.getApelido(),
                 usuario.getRole().name(),
-                usuario.isOnboardingConcluido());
+                usuario.isOnboardingConcluido(),
+                usuario.getFormatosPreferidos());
     }
 
     @Transactional(readOnly = true)
@@ -85,6 +86,7 @@ public class AuthService {
                 usuario.getEmail(),
                 usuario.getApelido(),
                 usuario.getRole().name(),
-                usuario.isOnboardingConcluido());
+                usuario.isOnboardingConcluido(),
+                usuario.getFormatosPreferidos());
     }
 }

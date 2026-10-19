@@ -1,5 +1,8 @@
 package dev.shiori.dto.usuario;
 
+import java.util.Set;
+
+import dev.shiori.domain.enums.TipoObra;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -10,6 +13,7 @@ public record ConcluirOnboardingRequest(
 
         String fusoHorario,
         String fotoUrl,
-        String descricao
+        String descricao,
+        Set<TipoObra> formatosPreferidos
 ) {
 }

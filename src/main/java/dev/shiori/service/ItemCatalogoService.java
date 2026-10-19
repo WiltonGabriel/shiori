@@ -59,6 +59,13 @@ public class ItemCatalogoService {
             throw new RegraDeNegocioException("Esta obra já está adicionada à sua estante");
         }
 
+        if (usuario.getFormatosPreferidos() != null && !usuario.getFormatosPreferidos().isEmpty()
+                && !usuario.getFormatosPreferidos().contains(obra.getTipoObra())) {
+            throw new RegraDeNegocioException(
+                    "Não é possível adicionar a obra '" + obra.getTituloPrincipal() + "' à sua estante pois o formato '" +
+                    obra.getTipoObra().getDescricao() + "' está desativado em suas preferências de leitura. Habilite-o nas configurações.");
+        }
+
         ItemCatalogo item = new ItemCatalogo(
                 usuario,
                 obra,
@@ -173,6 +180,11 @@ public class ItemCatalogoService {
 
     @Transactional(readOnly = true)
     public Page<ItemCatalogoResponse> listarMinhaEstante(Long usuarioId, Pageable pageable) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario != null && usuario.getFormatosPreferidos() != null && !usuario.getFormatosPreferidos().isEmpty()) {
+            return itemCatalogoRepository.findByUsuarioIdAndObraTipoObraIn(usuarioId, usuario.getFormatosPreferidos(), pageable)
+                    .map(item -> ItemCatalogoResponse.aPartirDe(item, true));
+        }
         return itemCatalogoRepository.findByUsuarioId(usuarioId, pageable)
                 .map(item -> ItemCatalogoResponse.aPartirDe(item, true));
     }

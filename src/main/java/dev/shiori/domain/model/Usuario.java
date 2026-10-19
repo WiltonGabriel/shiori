@@ -2,21 +2,29 @@ package dev.shiori.domain.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import dev.shiori.domain.enums.Role;
+import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.exception.RegraDeNegocioException;
 import dev.shiori.infra.crypto.EmailCryptoConverter;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.slf4j.Logger;
@@ -81,6 +89,15 @@ public class Usuario extends EntidadeBase {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ConsentimentoUsuario> consentimentos = new ArrayList<>();
 
+    @ElementCollection(targetClass = TipoObra.class, fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "tb_usuario_formatos_preferidos",
+            joinColumns = @JoinColumn(name = "usuario_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_obra", nullable = false)
+    private Set<TipoObra> formatosPreferidos = new HashSet<>(TipoObra.FORMATOS_OFICIAIS);
+
     protected Usuario() {
     }
 
@@ -101,6 +118,7 @@ public class Usuario extends EntidadeBase {
         this.ativo = true;
         this.role = Role.ROLE_USER;
         this.pontosConfianca = 0;
+        this.formatosPreferidos = new HashSet<>(TipoObra.FORMATOS_OFICIAIS);
     }
 
     public Usuario(String email, String senha, String apelido) {
@@ -111,9 +129,12 @@ public class Usuario extends EntidadeBase {
         }
     }
 
-    public void concluirOnboarding(String apelido, String fusoHorario, String fotoUrl, String descricao) {
+    public void concluirOnboarding(String apelido, String fusoHorario, String fotoUrl, String descricao, Set<TipoObra> formatos) {
         if (apelido == null || apelido.isBlank()) {
             throw new RegraDeNegocioException("O apelido é obrigatório para concluir o onboarding");
+        }
+        if (formatos == null || formatos.isEmpty()) {
+            throw new RegraDeNegocioException("Selecione ao menos um formato de leitura de seu interesse");
         }
         this.apelido = apelido.trim().toLowerCase();
         if (fusoHorario != null && !fusoHorario.isBlank()) {
@@ -121,8 +142,30 @@ public class Usuario extends EntidadeBase {
         }
         this.fotoUrl = fotoUrl;
         this.descricao = descricao;
+        this.formatosPreferidos.clear();
+        this.formatosPreferidos.addAll(formatos);
         this.onboardingConcluido = true;
         this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void concluirOnboarding(String apelido, String fusoHorario, String fotoUrl, String descricao) {
+        concluirOnboarding(apelido, fusoHorario, fotoUrl, descricao, new HashSet<>(TipoObra.FORMATOS_OFICIAIS));
+    }
+
+    public void atualizarFormatosPreferidos(Set<TipoObra> novosFormatos) {
+        if (novosFormatos == null || novosFormatos.isEmpty()) {
+            throw new RegraDeNegocioException("Pelo menos um formato literário deve ser selecionado nas preferências");
+        }
+        this.formatosPreferidos.clear();
+        this.formatosPreferidos.addAll(novosFormatos);
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public Set<TipoObra> getFormatosPreferidos() {
+        if (formatosPreferidos == null || formatosPreferidos.isEmpty()) {
+            return new HashSet<>(TipoObra.FORMATOS_OFICIAIS);
+        }
+        return Collections.unmodifiableSet(formatosPreferidos);
     }
 
     public void atualizarPerfil(String novoApelido, String novaFotoUrl, String novaDescricao, String novoFusoHorario) {
@@ -414,6 +457,7 @@ public class Usuario extends EntidadeBase {
         dados.put("totalItensEstante", this.estante.size());
         dados.put("totalConexoesEnviadas", this.conexoesEnviadas.size());
         dados.put("totalConexoesRecebidas", this.conexoesRecebidas.size());
+        dados.put("formatosPreferidos", this.getFormatosPreferidos().stream().map(TipoObra::name).toList());
         return dados;
     }
 

@@ -33,6 +33,10 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
     @EntityGraph(attributePaths = {"generos", "tags"})
     List<Obra> findByTagsContains(dev.shiori.domain.model.Tag tag);
 
+    @EntityGraph(attributePaths = {"generos", "tags"})
+    @org.springframework.data.jpa.repository.Query("SELECT o FROM Obra o WHERE LOWER(o.tituloPrincipal) LIKE LOWER(CONCAT('%', :termo, '%')) OR (o.tituloOriginal IS NOT NULL AND LOWER(o.tituloOriginal) LIKE LOWER(CONCAT('%', :termo, '%')))")
+    List<Obra> pesquisarPorTermo(@org.springframework.data.repository.query.Param("termo") String termo);
+
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE Obra o SET o.criadoPorUsuarioId = null WHERE o.criadoPorUsuarioId = :usuarioId")
     void desvincularCriador(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);

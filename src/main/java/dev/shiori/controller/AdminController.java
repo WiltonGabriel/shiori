@@ -157,6 +157,12 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/generos")
+    public ResponseEntity<List<GeneroResponse>> listarGeneros(@CurrentUser UsuarioPrincipal adminLogado) {
+        List<GeneroResponse> lista = adminService.listarGeneros(adminLogado.getId());
+        return ResponseEntity.ok(lista);
+    }
+
     @PostMapping("/generos")
     public ResponseEntity<GeneroResponse> criarGenero(
             @CurrentUser UsuarioPrincipal adminLogado,

@@ -116,6 +116,10 @@ public class AtividadeFeed extends EntidadeBase {
         return dataCriacao;
     }
 
+    public void setDataCriacao(LocalDateTime dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

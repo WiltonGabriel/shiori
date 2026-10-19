@@ -125,6 +125,11 @@ public class AdminService {
         return curadoriaService.criarGenero(request, adminId);
     }
 
+    @Transactional(readOnly = true)
+    public List<GeneroResponse> listarGeneros(Long adminId) {
+        return curadoriaService.listarGeneros(adminId);
+    }
+
     public MesclarTagsResponse mesclarTags(MesclarTagsRequest request, Long adminId) {
         return curadoriaService.mesclarTags(request, adminId);
     }
