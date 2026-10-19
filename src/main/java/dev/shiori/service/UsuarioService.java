@@ -2,20 +2,27 @@ package dev.shiori.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import dev.shiori.domain.enums.Visibilidade;
 import dev.shiori.domain.exception.RecursoNaoEncontradoException;
+import dev.shiori.domain.exception.RegraDeNegocioException;
 import dev.shiori.domain.model.ItemCatalogo;
 import dev.shiori.domain.model.Usuario;
 import dev.shiori.dto.catalogo.ItemCatalogoResponse;
+import dev.shiori.dto.usuario.AlterarEmailRequest;
+import dev.shiori.dto.usuario.AlterarSenhaRequest;
+import dev.shiori.dto.usuario.AtualizarPerfilRequest;
+import dev.shiori.dto.usuario.ConcluirOnboardingRequest;
 import dev.shiori.dto.usuario.UsuarioPerfilPublicoResponse;
 import dev.shiori.dto.usuario.UsuarioPerfilResponse;
 import dev.shiori.repository.AtividadeFeedRepository;
@@ -43,6 +50,7 @@ public class UsuarioService {
     private final HistoricoLeituraRepository historicoLeituraRepository;
     private final AtividadeFeedRepository atividadeFeedRepository;
     private final StorageService storageService;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
@@ -54,7 +62,8 @@ public class UsuarioService {
             SugestaoEdicaoObraRepository sugestaoEdicaoObraRepository,
             HistoricoLeituraRepository historicoLeituraRepository,
             AtividadeFeedRepository atividadeFeedRepository,
-            StorageService storageService) {
+            StorageService storageService,
+            PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.itemCatalogoRepository = itemCatalogoRepository;
         this.conexaoUsuarioRepository = conexaoUsuarioRepository;
@@ -65,12 +74,12 @@ public class UsuarioService {
         this.historicoLeituraRepository = historicoLeituraRepository;
         this.atividadeFeedRepository = atividadeFeedRepository;
         this.storageService = storageService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public UsuarioPerfilResponse atualizarAvatar(Long usuarioId, MultipartFile file) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
 
         String fotoUrl = storageService.uploadFile(file, "avatares");
         usuario.atualizarFotoUrl(fotoUrl);
@@ -81,9 +90,83 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public UsuarioPerfilResponse buscarPerfilPorId(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
         return UsuarioPerfilResponse.aPartirDe(usuario);
+    }
+
+    @Transactional
+    public UsuarioPerfilResponse concluirOnboarding(Long usuarioId, ConcluirOnboardingRequest request) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+
+        String apelidoFormatado = request.apelido().trim().toLowerCase();
+        usuarioRepository.findByApelido(apelidoFormatado)
+                .filter(u -> !u.getId().equals(usuarioId))
+                .ifPresent(u -> {
+                    throw new RegraDeNegocioException("O apelido '" + request.apelido() + "' já está em uso por outro usuário.");
+                });
+
+        usuario.concluirOnboarding(request.apelido(), request.fusoHorario(), request.fotoUrl(), request.descricao());
+        usuarioRepository.save(usuario);
+
+        return UsuarioPerfilResponse.aPartirDe(usuario);
+    }
+
+    @Transactional
+    public UsuarioPerfilResponse atualizarPerfil(Long usuarioId, AtualizarPerfilRequest request) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+
+        if (request.apelido() != null && !request.apelido().isBlank()) {
+            String apelidoFormatado = request.apelido().trim().toLowerCase();
+            usuarioRepository.findByApelido(apelidoFormatado)
+                    .filter(u -> !u.getId().equals(usuarioId))
+                    .ifPresent(u -> {
+                        throw new RegraDeNegocioException("O apelido '" + request.apelido() + "' já está em uso por outro usuário.");
+                    });
+        }
+
+        usuario.atualizarPerfil(request.apelido(), request.fotoUrl(), request.descricao(), request.fusoHorario());
+        usuarioRepository.save(usuario);
+
+        return UsuarioPerfilResponse.aPartirDe(usuario);
+    }
+
+    @Transactional
+    public UsuarioPerfilResponse alterarEmail(Long usuarioId, AlterarEmailRequest request) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+
+        if (!passwordEncoder.matches(request.senhaAtual(), usuario.getSenha())) {
+            throw new RegraDeNegocioException("Senha atual informada está incorreta.");
+        }
+
+        String emailFormatado = request.novoEmail().trim().toLowerCase();
+        usuarioRepository.findByEmail(emailFormatado)
+                .filter(u -> !u.getId().equals(usuarioId))
+                .ifPresent(u -> {
+                    throw new RegraDeNegocioException("O e-mail '" + request.novoEmail() + "' já está cadastrado.");
+                });
+
+        usuario.alterarEmail(request.novoEmail());
+        usuarioRepository.save(usuario);
+
+        return UsuarioPerfilResponse.aPartirDe(usuario);
+    }
+
+    @Transactional
+    public void alterarSenha(Long usuarioId, AlterarSenhaRequest request) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+
+        if (!passwordEncoder.matches(request.senhaAtual(), usuario.getSenha())) {
+            throw new RegraDeNegocioException("Senha atual informada está incorreta.");
+        }
+
+        usuario.atualizarSenhaComHash(request.novaSenha(), passwordEncoder);
+        usuarioRepository.save(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> exportarDados(Long usuarioId) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+        return usuario.exportarDadosEmJson();
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +179,6 @@ public class UsuarioService {
         Collection<Visibilidade> visibilidadesPermitidas;
 
         if (ehProprioDono) {
-            // O próprio usuário enxerga tudo em sua estante
             visibilidadesPermitidas = List.of(Visibilidade.PUBLICO, Visibilidade.RESTRITO, Visibilidade.PRIVADO);
         } else {
             if (solicitanteId != null) {
@@ -104,10 +186,8 @@ public class UsuarioService {
             }
 
             if (saoConexoes) {
-                // Amigos com conexão aceita visualizam obras públicas e restritas
                 visibilidadesPermitidas = List.of(Visibilidade.PUBLICO, Visibilidade.RESTRITO);
             } else {
-                // Visitantes externos enxergam apenas obras públicas
                 visibilidadesPermitidas = List.of(Visibilidade.PUBLICO);
             }
         }
@@ -123,32 +203,29 @@ public class UsuarioService {
 
     @Transactional
     public void anonimizarContaLGPD(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
 
         log.info("INICIO_PURGA_LGPD: Anonimizando dados do usuário [id={}, email={}]", usuario.getId(), usuario.getEmail());
 
-        // 1. Preservar integridade do catálogo público: desvincular autoria de Obras e Tags criadas
         obraRepository.desvincularCriador(usuarioId);
         tagRepository.desvincularCriador(usuarioId);
-
-        // 2. Desvincular sugestões de edição comunitárias
         sugestaoEdicaoObraRepository.desvincularUsuarioSugeridor(usuarioId);
-
-        // 3. Desvincular comentários públicos e desativá-los
         comentarioRepository.desvincularAutor(usuarioId);
 
-        // 4. Destruir dados pessoais sociais: atividades do feed, históricos de leitura, estante e conexões
         atividadeFeedRepository.deletarPorUsuarioId(usuarioId);
         historicoLeituraRepository.deletarPorUsuarioId(usuarioId);
         itemCatalogoRepository.deletarPorUsuarioId(usuarioId);
         conexaoUsuarioRepository.deletarTodasConexoesDoUsuario(usuarioId);
 
-        // 5. Anonimizar o registro do usuário e expurgar dados pessoais em repouso
         usuario.anonimizarParaLGPD();
         usuarioRepository.save(usuario);
 
         log.info("CONCLUSAO_PURGA_LGPD: Conta e dados pessoais destruídos com sucesso para o usuário [id={}]", usuarioId);
+    }
+
+    private Usuario buscarUsuarioPorId(Long usuarioId) {
+        return usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
     }
 
     private Usuario buscarUsuarioPorIdentificador(String username) {

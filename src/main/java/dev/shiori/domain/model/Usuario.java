@@ -146,6 +146,14 @@ public class Usuario extends EntidadeBase {
         this.ultimaAtualizacao = LocalDateTime.now();
     }
 
+    public void alterarEmail(String novoEmail) {
+        if (novoEmail == null || novoEmail.isBlank() || !novoEmail.contains("@")) {
+            throw new RegraDeNegocioException("E-mail informado é inválido");
+        }
+        this.email = novoEmail.trim().toLowerCase();
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
     public ConexaoUsuario solicitarConexaoCom(Usuario destinatario) {
         if (destinatario == null) {
             throw new RegraDeNegocioException("O destinatário da conexão não pode ser nulo");

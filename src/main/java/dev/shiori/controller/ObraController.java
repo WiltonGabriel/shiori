@@ -22,7 +22,7 @@ import dev.shiori.service.ObraService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/obras")
+@RequestMapping({"/obras", "/api/obras"})
 public class ObraController {
 
     private final ObraService obraService;

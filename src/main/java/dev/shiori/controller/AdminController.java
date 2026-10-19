@@ -177,13 +177,13 @@ public class AdminController {
     // 4. INTEGRAÇÕES EXTERNAS DINÂMICAS
     // ==========================================
 
-    @GetMapping("/integracoes")
+    @GetMapping({"/integracoes", "/provedores"})
     public ResponseEntity<List<ProvedorIntegracaoResponse>> listarIntegracoes(@CurrentUser UsuarioPrincipal adminLogado) {
         List<ProvedorIntegracaoResponse> lista = adminService.listarProvedoresIntegracao(adminLogado.getId());
         return ResponseEntity.ok(lista);
     }
 
-    @PostMapping("/integracoes")
+    @PostMapping({"/integracoes", "/provedores"})
     public ResponseEntity<ProvedorIntegracaoResponse> salvarIntegracao(
             @CurrentUser UsuarioPrincipal adminLogado,
             @Valid @RequestBody SalvarProvedorIntegracaoRequest request) {
