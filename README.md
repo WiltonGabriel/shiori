@@ -94,6 +94,25 @@ A API estará acessível por padrão em `http://localhost:8080`.
 
 ---
 
+## 📚 Documentação Pública e Guia de Integração (Open Source)
+
+Se você é um desenvolvedor construindo um front-end alternativo (Web, Mobile, Desktop ou CLI) ou integrando bots/ferramentas externas com a Shiori API, consulte o nosso guia detalhado com arquitetura, autenticação Bearer JWT, estrutura de erros RFC 9457 e catálogo de endpoints:
+
+📖 **[Guia Completo de Integração com a Shiori API](docs/API_INTEGRATION_GUIDE.md)**
+
+---
+
+## 🐳 Execução via Docker e Docker Compose
+
+Para subir o back-end em container utilizando o Docker Compose de produção:
+
+```bash
+docker compose up -d
+docker compose logs -f shiori-api
+```
+
+---
+
 ## 🛡️ Segurança e Proteção de Dados
 
 Para relatar vulnerabilidades ou dúvidas sobre proteção de dados, por favor abra uma issue de segurança ou entre em contato com os mantenedores. Consulte nossa documentação de conformidade e as diretrizes do projeto.

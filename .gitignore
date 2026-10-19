@@ -41,13 +41,10 @@ application-dev.properties
 application-dev.yml
 
 # ===================================================================
-# DOCUMENTAÇÃO PRIVADA E PALÁCIO DA MEMÓRIA DA IA
+# DOCUMENTAÇÃO PRIVADA E PALÁCIO DA MEMÓRIA DA IA (APENAS MEMÓRIA IGNORADA)
 # ===================================================================
-Docs/STATUS_MENTORIA.md
-docs/memory/
-Docs/memory/
 Docs/
-docs/
+docs/memory/
 
 # ===================================================================
 # INFRAESTRUTURA LOCAL, DOCKER & STORAGE DATA
