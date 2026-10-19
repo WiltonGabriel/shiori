@@ -27,8 +27,9 @@ O **Shiori API** é o coração da plataforma Shiori. Ele provê serviços de al
   - Spring Security (Autenticação Stateless e Autorização RBAC)
   - Spring Validation (Bean Validation)
 - **Banco de Dados:** PostgreSQL (Produção / Docker) e H2 in-memory (Testes automatizados)
-- **Armazenamento de Objetos (Storage):** Object Storage compatível com S3 (MinIO) para capas e avatares
+- **Armazenamento de Objetos (Storage):** Armazenamento Compatível com S3 (AWS, R2, MinIO) para avatares, capas e mídias estáticas
 - **Respostas de Erro:** RFC 9457 (`ProblemDetail`)
+- **SDK de Armazenamento:** AWS Java SDK v2 (S3)
 - **Gerenciador de Dependências:** Apache Maven com Maven Wrapper
 
 ---
@@ -62,10 +63,21 @@ A arquitetura do Shiori segue os princípios de **Clean Architecture** e **Domai
    ```
 
 2. **Configure as Variáveis de Ambiente:**
-   Copie o arquivo de exemplo `.env.example` para `.env` e ajuste as variáveis para o seu ambiente local:
+   Copie o arquivo de exemplo `.env.example` para `.env` e ajuste as variáveis para o seu ambiente:
    ```bash
    cp .env.example .env
    ```
+
+   Principais variáveis configuráveis:
+   - `PORT`: Porta HTTP da aplicação (padrão `8080`).
+   - `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`: Conexão com o banco PostgreSQL.
+   - `SHIORI_CRYPTO_KEY`: Chave simétrica AES-256 (gerada via `openssl rand -hex 32`).
+   - `JWT_SECRET`: Chave para assinatura de tokens JWT (mínimo de 256 bits).
+   - `S3_ENDPOINT`: URL base do serviço S3 compatível (ex: `http://localhost:9000` ou endpoint AWS/R2).
+   - `S3_ACCESS_KEY`: Access Key para autenticação S3.
+   - `S3_SECRET_KEY`: Secret Key para autenticação S3.
+   - `S3_REGION`: Região S3 (ex: `us-east-1`).
+   - `S3_BUCKET_NAME`: Nome do bucket para armazenamento de mídias (ex: `shiori-media`).
 
 3. **Execute os Testes Automatizados:**
    Valide se o ambiente local compila e passa na suíte completa de testes:

@@ -62,4 +62,58 @@ public class TratadorDeErrosGlobal {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ProblemDetail tratarCredenciaisInvalidas(org.springframework.security.authentication.BadCredentialsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Credenciais inválidas.");
+        problem.setTitle("Autenticação Falhou");
+        problem.setType(URI.create("https://shiori.dev/erros/credenciais-invalidas"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ProblemDetail tratarAcessoNegado(org.springframework.security.access.AccessDeniedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Acesso proibido.");
+        problem.setTitle("Acesso Proibido");
+        problem.setType(URI.create("https://shiori.dev/erros/acesso-proibido"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(dev.shiori.domain.exception.MidiaNaoSuportadaException.class)
+    public ProblemDetail tratarMidiaNaoSuportada(dev.shiori.domain.exception.MidiaNaoSuportadaException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex.getMessage());
+        problem.setTitle("Mídia Não Suportada");
+        problem.setType(URI.create("https://shiori.dev/erros/midia-nao-suportada"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(dev.shiori.domain.exception.ArquivoInvalidoException.class)
+    public ProblemDetail tratarArquivoInvalido(dev.shiori.domain.exception.ArquivoInvalidoException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Arquivo Inválido");
+        problem.setType(URI.create("https://shiori.dev/erros/arquivo-invalido"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(dev.shiori.domain.exception.StorageException.class)
+    public ProblemDetail tratarErroStorage(dev.shiori.domain.exception.StorageException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+        problem.setTitle("Falha no Armazenamento");
+        problem.setType(URI.create("https://shiori.dev/erros/armazenamento"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ProblemDetail tratarTamanhoMaximoExcedido(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE, "O tamanho do arquivo enviado excede o limite máximo permitido.");
+        problem.setTitle("Arquivo Muito Grande");
+        problem.setType(URI.create("https://shiori.dev/erros/arquivo-muito-grande"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 }
