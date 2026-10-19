@@ -66,6 +66,9 @@ public class Usuario extends EntidadeBase {
     @Column(nullable = false)
     private Integer pontosConfianca = 0;
 
+    @Column(nullable = false)
+    private Integer strikes = 0;
+
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemCatalogo> estante = new ArrayList<>();
 
@@ -285,6 +288,82 @@ public class Usuario extends EntidadeBase {
         }
         log.info("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] acessou configurações do usuário [id={}, apelido={}], motivo: {}",
                 adminOperador.getId(), adminOperador.getApelidoOuEmail(), getId(), getApelidoOuEmail(), motivo);
+    }
+
+    public void banirPorAdmin(Usuario adminOperador, String motivo) {
+        if (adminOperador == null || !adminOperador.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem banir usuários");
+        }
+        if (this.isAdmin()) {
+            throw new RegraDeNegocioException("Não é permitido banir outro administrador");
+        }
+        this.ativo = false;
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] baniu o usuário [id={}, apelido={}], motivo: {}",
+                adminOperador.getId(), adminOperador.getApelidoOuEmail(), getId(), getApelidoOuEmail(), motivo);
+    }
+
+    public void alterarRolePorAdmin(Usuario adminOperador, Role novaRole) {
+        if (adminOperador == null || !adminOperador.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem alterar a role de outros usuários");
+        }
+        if (novaRole == null) {
+            throw new RegraDeNegocioException("A nova role não pode ser nula");
+        }
+        if (getId() != null && getId().equals(adminOperador.getId()) && novaRole != Role.ROLE_ADMIN) {
+            throw new RegraDeNegocioException("O administrador não pode revogar o próprio papel de administrador");
+        }
+        Role roleAntiga = this.role;
+        this.role = novaRole;
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] alterou a role do usuário [id={}, apelido={}] de {} para {}",
+                adminOperador.getId(), adminOperador.getApelidoOuEmail(), getId(), getApelidoOuEmail(), roleAntiga, novaRole);
+    }
+
+    public void alterarStatusAtivoPorAdmin(Usuario adminOperador, boolean novoStatus, String motivo) {
+        if (adminOperador == null || !adminOperador.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem alterar o status de contas");
+        }
+        if (getId() != null && getId().equals(adminOperador.getId()) && !novoStatus) {
+            throw new RegraDeNegocioException("O administrador não pode inativar a própria conta");
+        }
+        this.ativo = novoStatus;
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] alterou status da conta do usuário [id={}, apelido={}] para ativo={}, motivo: {}",
+                adminOperador.getId(), adminOperador.getApelidoOuEmail(), getId(), getApelidoOuEmail(), novoStatus, motivo);
+    }
+
+    public int aplicarStrikePorAdmin(Usuario adminOperador, String motivo) {
+        if (adminOperador == null || !adminOperador.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem aplicar strikes a usuários");
+        }
+        if (this.isAdmin()) {
+            throw new RegraDeNegocioException("Não é permitido aplicar strike em outro administrador");
+        }
+        if (this.strikes == null) {
+            this.strikes = 0;
+        }
+        this.strikes++;
+        boolean banidoAutomatico = false;
+        if (this.strikes >= 3) {
+            this.ativo = false;
+            banidoAutomatico = true;
+        }
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] aplicou STRIKE no usuário [id={}, apelido={}]. Total de strikes: {}. Banido automaticamente: {}. Motivo: {}",
+                adminOperador.getId(), adminOperador.getApelidoOuEmail(), getId(), getApelidoOuEmail(), this.strikes, banidoAutomatico, motivo);
+        return this.strikes;
+    }
+
+    public void zerarOuRemoverStrikePorAdmin(Usuario adminOperador, String motivo) {
+        if (adminOperador == null || !adminOperador.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem remover strikes");
+        }
+        if (this.strikes != null && this.strikes > 0) {
+            this.strikes--;
+        }
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] removeu strike do usuário [id={}, apelido={}]. Total restante: {}. Motivo: {}",
+                adminOperador.getId(), adminOperador.getApelidoOuEmail(), getId(), getApelidoOuEmail(), this.strikes, motivo);
+    }
+
+    public Integer getStrikes() {
+        return strikes != null ? strikes : 0;
     }
 
     public boolean isAdmin() {

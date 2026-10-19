@@ -108,6 +108,14 @@ public class HistoricoLeitura extends EntidadeBase {
         this.ultimaAtualizacao = LocalDateTime.now();
     }
 
+    public void transferirParaItem(ItemCatalogo novoItem) {
+        if (novoItem == null) {
+            throw new RegraDeNegocioException("O novo item de catálogo é obrigatório");
+        }
+        this.itemCatalogo = novoItem;
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
     public ItemCatalogo getItemCatalogo() {
         return itemCatalogo;
     }

@@ -24,4 +24,8 @@ public interface AtividadeFeedRepository extends JpaRepository<AtividadeFeed, Lo
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE AtividadeFeed a SET a.itemCatalogo = null WHERE a.itemCatalogo.id IN (SELECT i.id FROM ItemCatalogo i WHERE i.usuario.id = :usuarioId)")
     void desvincularItemCatalogoPorUsuarioId(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE AtividadeFeed a SET a.obra.id = :obraPrincipalId WHERE a.obra.id = :obraDuplicadaId")
+    int transferirObra(@org.springframework.data.repository.query.Param("obraDuplicadaId") Long obraDuplicadaId, @org.springframework.data.repository.query.Param("obraPrincipalId") Long obraPrincipalId);
 }

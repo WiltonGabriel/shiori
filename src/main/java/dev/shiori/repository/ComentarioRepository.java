@@ -27,4 +27,8 @@ public interface ComentarioRepository extends JpaRepository<Comentario, Long> {
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE Comentario c SET c.autor = null, c.ativo = false WHERE c.autor.id = :usuarioId")
     void desvincularAutor(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE Comentario c SET c.obra.id = :obraPrincipalId WHERE c.obra.id = :obraDuplicadaId")
+    int transferirObra(@org.springframework.data.repository.query.Param("obraDuplicadaId") Long obraDuplicadaId, @org.springframework.data.repository.query.Param("obraPrincipalId") Long obraPrincipalId);
 }

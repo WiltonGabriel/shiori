@@ -34,6 +34,7 @@ public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Long
     @EntityGraph(attributePaths = {"obra"})
     Page<ItemCatalogo> findByUsuarioIdAndVisibilidadeIn(Long usuarioId, Collection<Visibilidade> visibilidades, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"usuario", "historicosLeitura"})
     List<ItemCatalogo> findByObraId(Long obraId);
 
     long countByUsuarioId(Long usuarioId);

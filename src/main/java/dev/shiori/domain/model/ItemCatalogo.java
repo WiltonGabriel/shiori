@@ -160,6 +160,34 @@ public class ItemCatalogo extends EntidadeBase {
         this.ultimaAtualizacao = LocalDateTime.now();
     }
 
+    public void transferirParaObra(Obra novaObra) {
+        if (novaObra == null) {
+            throw new RegraDeNegocioException("A nova obra é obrigatória para transferência");
+        }
+        this.obra = novaObra;
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void incorporarCiclosDe(ItemCatalogo outroItem) {
+        if (outroItem == null || outroItem.equals(this)) {
+            return;
+        }
+        for (HistoricoLeitura ciclo : new ArrayList<>(outroItem.getHistoricosLeitura())) {
+            ciclo.transferirParaItem(this);
+            this.historicosLeitura.add(ciclo);
+        }
+        if (outroItem.getProgressoAtual() != null && (this.progressoAtual == null || outroItem.getProgressoAtual() > this.progressoAtual)) {
+            this.progressoAtual = outroItem.getProgressoAtual();
+        }
+        if (outroItem.getVolumeAtual() != null && (this.volumeAtual == null || outroItem.getVolumeAtual() > this.volumeAtual)) {
+            this.volumeAtual = outroItem.getVolumeAtual();
+        }
+        if (this.avaliacaoPessoal == null && outroItem.getAvaliacaoPessoal() != null) {
+            this.avaliacaoPessoal = outroItem.getAvaliacaoPessoal();
+        }
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
     public HistoricoLeitura registrarCicloLeitura(Double capituloAtingido, Double notaCiclo, String anotacoes) {
         if (capituloAtingido == null) {
             throw new RegraDeNegocioException("O capítulo atingido é obrigatório para registrar o ciclo");

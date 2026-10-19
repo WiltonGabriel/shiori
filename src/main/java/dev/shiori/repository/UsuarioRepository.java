@@ -28,6 +28,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Page<Usuario> findByAtivoTrue(Pageable pageable);
 
+    long countByAtivoTrue();
+
     @EntityGraph(attributePaths = {"consentimentos"})
     Optional<Usuario> findComConsentimentosById(Long id);
 }

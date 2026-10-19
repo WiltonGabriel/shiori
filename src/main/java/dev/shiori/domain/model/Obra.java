@@ -114,6 +114,9 @@ public class Obra extends EntidadeBase {
     @Column(name = "aviso_conteudo", nullable = false)
     private Set<AvisoConteudo> avisosConteudo = new HashSet<>();
 
+    @Column(nullable = false)
+    private boolean protegidoContraSync = false;
+
     protected Obra() {
     }
 
@@ -230,6 +233,89 @@ public class Obra extends EntidadeBase {
 
     public void anonimizarCriador() {
         this.criadoPorUsuarioId = null;
+    }
+
+    public void oficializarPorAdmin(Usuario admin) {
+        if (admin == null || !admin.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem oficializar uma obra no catálogo");
+        }
+        this.statusCatalogo = StatusCatalogo.OFICIAL;
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] oficializou a obra [id={}, titulo={}]",
+                admin.getId(), admin.getApelidoOuEmail(), getId(), this.tituloPrincipal);
+    }
+
+    public void incorporarMetadadosDe(Obra duplicada) {
+        if (duplicada == null || duplicada.equals(this)) {
+            return;
+        }
+        for (Genero g : duplicada.getGeneros()) {
+            this.generos.add(g);
+        }
+        for (Tag t : duplicada.getTags()) {
+            this.tags.add(t);
+        }
+        for (AvisoConteudo ac : duplicada.getAvisosConteudo()) {
+            this.avisosConteudo.add(ac);
+        }
+        if (this.anilistId == null && duplicada.getAnilistId() != null) {
+            this.anilistId = duplicada.getAnilistId();
+        }
+        if (this.malId == null && duplicada.getMalId() != null) {
+            this.malId = duplicada.getMalId();
+        }
+        if (this.mangadexId == null && duplicada.getMangadexId() != null) {
+            this.mangadexId = duplicada.getMangadexId();
+        }
+        if (this.totalCapitulosLancados == null && duplicada.getTotalCapitulosLancados() != null) {
+            this.totalCapitulosLancados = duplicada.getTotalCapitulosLancados();
+        }
+        if (this.totalVolumes == null && duplicada.getTotalVolumes() != null) {
+            this.totalVolumes = duplicada.getTotalVolumes();
+        }
+    }
+
+    public void aplicarOverrideAdministrativo(
+            Usuario admin,
+            String novoTituloPrincipal,
+            String novoTituloOriginal,
+            String novaCapaUrl,
+            String novaSinopse,
+            Integer novoTotalCapitulos,
+            Integer novoTotalVolumes) {
+        if (admin == null || !admin.isAdmin()) {
+            throw new RegraDeNegocioException("Apenas administradores podem aplicar override em obras oficiais");
+        }
+        if (novoTituloPrincipal != null && !novoTituloPrincipal.isBlank()) {
+            this.tituloPrincipal = novoTituloPrincipal.trim();
+        }
+        if (novoTituloOriginal != null) {
+            this.tituloOriginal = novoTituloOriginal.trim();
+        }
+        if (novaCapaUrl != null) {
+            this.capaUrl = novaCapaUrl.trim();
+        }
+        if (novaSinopse != null) {
+            this.sinopse = novaSinopse.trim();
+        }
+        if (novoTotalCapitulos != null) {
+            this.totalCapitulosLancados = novoTotalCapitulos;
+        }
+        if (novoTotalVolumes != null) {
+            this.totalVolumes = novoTotalVolumes;
+        }
+        this.protegidoContraSync = true;
+        this.statusCatalogo = StatusCatalogo.OFICIAL;
+
+        log.warn("AUDITORIA_SEGURANCA: Administrador [id={}, apelido={}] aplicou OVERRIDE na obra [id={}, titulo='{}']. Obra agora blindada contra sync automático.",
+                admin.getId(), admin.getApelidoOuEmail(), getId(), this.tituloPrincipal);
+    }
+
+    public boolean podeSerSincronizada() {
+        return !this.protegidoContraSync;
+    }
+
+    public boolean isProtegidoContraSync() {
+        return protegidoContraSync;
     }
 
     public void aplicarSugestaoAprovada(SugestaoEdicaoObra sugestao) {

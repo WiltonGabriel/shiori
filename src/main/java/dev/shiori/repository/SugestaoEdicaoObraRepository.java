@@ -21,7 +21,13 @@ public interface SugestaoEdicaoObraRepository extends JpaRepository<SugestaoEdic
     @EntityGraph(attributePaths = {"obra", "usuarioSugeridor", "adminAvaliador"})
     Page<SugestaoEdicaoObra> findByUsuarioSugeridorId(Long usuarioSugeridorId, Pageable pageable);
 
+    long countByStatus(StatusSugestao status);
+
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE SugestaoEdicaoObra s SET s.usuarioSugeridor = null WHERE s.usuarioSugeridor.id = :usuarioId")
     void desvincularUsuarioSugeridor(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE SugestaoEdicaoObra s SET s.obra.id = :obraPrincipalId WHERE s.obra.id = :obraDuplicadaId")
+    int transferirObra(@org.springframework.data.repository.query.Param("obraDuplicadaId") Long obraDuplicadaId, @org.springframework.data.repository.query.Param("obraPrincipalId") Long obraPrincipalId);
 }
