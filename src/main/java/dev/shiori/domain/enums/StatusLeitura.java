@@ -2,7 +2,7 @@ package dev.shiori.domain.enums;
 
 public enum StatusLeitura {
     LENDO,
-    FADIGOU,
+    ENGAVETADO,
     TERMINOU,
     PLANEJADO,
     PAUSADO,

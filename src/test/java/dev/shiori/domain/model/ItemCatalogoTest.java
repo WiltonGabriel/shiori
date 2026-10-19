@@ -86,12 +86,12 @@ class ItemCatalogoTest {
     }
 
     @Test
-    @DisplayName("Transição de status de leitura (LENDO, FADIGOU, TERMINOU)")
+    @DisplayName("Transição de status de leitura (LENDO, ENGAVETADO, TERMINOU)")
     void deveAlterarStatusLeitura() {
         ItemCatalogo item = new ItemCatalogo(proprietario, obra, Visibilidade.PUBLICO, StatusLeitura.LENDO);
 
-        item.alterarStatusLeitura(StatusLeitura.FADIGOU);
-        assertThat(item.getStatusLeitura()).isEqualTo(StatusLeitura.FADIGOU);
+        item.alterarStatusLeitura(StatusLeitura.ENGAVETADO);
+        assertThat(item.getStatusLeitura()).isEqualTo(StatusLeitura.ENGAVETADO);
 
         item.alterarStatusLeitura(StatusLeitura.TERMINOU);
         assertThat(item.getStatusLeitura()).isEqualTo(StatusLeitura.TERMINOU);
