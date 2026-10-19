@@ -163,4 +163,46 @@ class CuradoriaCatalogoTest {
         assertThat(obraOficial.getTotalCapitulosLancados()).isEqualTo(380);
         assertThat(obraOficial.getCapaUrl()).isEqualTo("https://capas.shiori.dev/berserk.jpg");
     }
+
+    @Test
+    @DisplayName("Deve adicionar, remover e definir avisos de conteúdo na obra")
+    void deveGerenciarAvisosDeConteudoNaObra() {
+        obraManual.adicionarAvisoConteudo(dev.shiori.domain.enums.AvisoConteudo.VIOLENCIA);
+        obraManual.adicionarAvisoConteudo(dev.shiori.domain.enums.AvisoConteudo.GORE);
+
+        assertThat(obraManual.getAvisosConteudo()).containsExactlyInAnyOrder(
+                dev.shiori.domain.enums.AvisoConteudo.VIOLENCIA,
+                dev.shiori.domain.enums.AvisoConteudo.GORE
+        );
+
+        obraManual.removerAvisoConteudo(dev.shiori.domain.enums.AvisoConteudo.GORE);
+        assertThat(obraManual.getAvisosConteudo()).containsExactly(dev.shiori.domain.enums.AvisoConteudo.VIOLENCIA);
+
+        obraManual.definirAvisosConteudo(java.util.Set.of(dev.shiori.domain.enums.AvisoConteudo.CONTEUDO_SEXUAL));
+        assertThat(obraManual.getAvisosConteudo()).containsExactly(dev.shiori.domain.enums.AvisoConteudo.CONTEUDO_SEXUAL);
+    }
+
+    @Test
+    @DisplayName("Deve gerenciar status de publicação, total de volumes e IDs externos de integração")
+    void deveGerenciarStatusPublicacaoEIdsExternos() {
+        assertThat(obraManual.getStatusPublicacao()).isEqualTo(dev.shiori.domain.enums.StatusPublicacao.EM_LANCAMENTO);
+
+        obraManual.atualizarStatusPublicacao(dev.shiori.domain.enums.StatusPublicacao.CONCLUIDO);
+        assertThat(obraManual.getStatusPublicacao()).isEqualTo(dev.shiori.domain.enums.StatusPublicacao.CONCLUIDO);
+
+        obraManual.atualizarTotalVolumes(14);
+        assertThat(obraManual.getTotalVolumes()).isEqualTo(14);
+
+        assertThatThrownBy(() -> obraManual.atualizarTotalVolumes(-2))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("não pode ser negativo");
+
+        obraManual.definirAnilistId("105398");
+        obraManual.definirMalId("121496");
+        obraManual.definirMangadexId("32d76d19-8a05-4db0-9fc2-e0b0648fe9d0");
+
+        assertThat(obraManual.getAnilistId()).isEqualTo("105398");
+        assertThat(obraManual.getMalId()).isEqualTo("121496");
+        assertThat(obraManual.getMangadexId()).isEqualTo("32d76d19-8a05-4db0-9fc2-e0b0648fe9d0");
+    }
 }

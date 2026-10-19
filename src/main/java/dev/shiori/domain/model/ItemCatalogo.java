@@ -9,8 +9,10 @@ import java.util.Objects;
 import dev.shiori.domain.enums.StatusLeitura;
 import dev.shiori.domain.enums.Visibilidade;
 import dev.shiori.domain.exception.RegraDeNegocioException;
+import dev.shiori.infra.crypto.SensitiveDataCryptoConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -39,6 +41,9 @@ public class ItemCatalogo extends EntidadeBase {
     @Column(nullable = false)
     private Double progressoAtual = 0.0;
 
+    @Column(name = "volume_atual", nullable = false)
+    private Double volumeAtual = 0.0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusLeitura statusLeitura = StatusLeitura.LENDO;
@@ -46,6 +51,7 @@ public class ItemCatalogo extends EntidadeBase {
     @Column
     private Double avaliacaoPessoal;
 
+    @Convert(converter = SensitiveDataCryptoConverter.class)
     @Column(length = 500)
     private String urlLeitura;
 
@@ -56,8 +62,8 @@ public class ItemCatalogo extends EntidadeBase {
     @Column(nullable = false)
     private LocalDateTime dataAdicao;
 
-    @Column(nullable = false)
-    private LocalDateTime dataAtualizacao;
+    @Column(name = "ultima_atualizacao", nullable = false)
+    private LocalDateTime ultimaAtualizacao;
 
     @OneToMany(mappedBy = "itemCatalogo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HistoricoLeitura> historicosLeitura = new ArrayList<>();
@@ -79,7 +85,7 @@ public class ItemCatalogo extends EntidadeBase {
         this.statusLeitura = statusLeitura != null ? statusLeitura : StatusLeitura.LENDO;
         this.progressoAtual = 0.0;
         this.dataAdicao = LocalDateTime.now();
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public ItemCatalogo(Usuario usuario, Obra obra, Visibilidade visibilidade, StatusLeitura statusLeitura, String urlLeitura) {
@@ -103,7 +109,26 @@ public class ItemCatalogo extends EntidadeBase {
         }
 
         this.progressoAtual = novoProgresso;
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void atualizarVolumeAtual(Double novoVolume) {
+        if (novoVolume == null || novoVolume < 0.0) {
+            throw new RegraDeNegocioException("O volume atual não pode ser nulo ou negativo");
+        }
+        if (this.obra.getTotalVolumes() != null && novoVolume > this.obra.getTotalVolumes()) {
+            throw new RegraDeNegocioException("O volume atual não pode exceder o total de volumes da obra");
+        }
+
+        this.volumeAtual = novoVolume;
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void atualizarProgresso(Double novoProgresso, Double novoVolume) {
+        atualizarProgresso(novoProgresso);
+        if (novoVolume != null) {
+            atualizarVolumeAtual(novoVolume);
+        }
     }
 
     public void alterarStatusLeitura(StatusLeitura novoStatus) {
@@ -111,7 +136,7 @@ public class ItemCatalogo extends EntidadeBase {
             throw new RegraDeNegocioException("O status de leitura não pode ser nulo");
         }
         this.statusLeitura = novoStatus;
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public void avaliar(Double nota) {
@@ -119,7 +144,7 @@ public class ItemCatalogo extends EntidadeBase {
             throw new RegraDeNegocioException("A avaliação pessoal deve estar entre 0 e 10");
         }
         this.avaliacaoPessoal = nota;
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public void alterarVisibilidade(Visibilidade novaVisibilidade) {
@@ -127,12 +152,12 @@ public class ItemCatalogo extends EntidadeBase {
             throw new RegraDeNegocioException("A visibilidade não pode ser nula");
         }
         this.visibilidade = novaVisibilidade;
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public void atualizarUrlLeitura(String novaUrl) {
         this.urlLeitura = (novaUrl != null && !novaUrl.isBlank()) ? novaUrl.trim() : null;
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public HistoricoLeitura registrarCicloLeitura(Double capituloAtingido, Double notaCiclo, String anotacoes) {
@@ -144,7 +169,7 @@ public class ItemCatalogo extends EntidadeBase {
         HistoricoLeitura ciclo = new HistoricoLeitura(this, capituloInicial, capituloAtingido, notaCiclo, anotacoes);
         this.historicosLeitura.add(ciclo);
         this.progressoAtual = capituloAtingido;
-        this.dataAtualizacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
         return ciclo;
     }
 
@@ -199,6 +224,10 @@ public class ItemCatalogo extends EntidadeBase {
         return progressoAtual;
     }
 
+    public Double getVolumeAtual() {
+        return volumeAtual;
+    }
+
     public StatusLeitura getStatusLeitura() {
         return statusLeitura;
     }
@@ -219,8 +248,12 @@ public class ItemCatalogo extends EntidadeBase {
         return dataAdicao;
     }
 
+    public LocalDateTime getUltimaAtualizacao() {
+        return ultimaAtualizacao;
+    }
+
     public LocalDateTime getDataAtualizacao() {
-        return dataAtualizacao;
+        return ultimaAtualizacao;
     }
 
     @Override

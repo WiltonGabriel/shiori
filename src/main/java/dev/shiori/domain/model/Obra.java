@@ -7,13 +7,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import dev.shiori.domain.enums.AvisoConteudo;
 import dev.shiori.domain.enums.MotivoDenuncia;
 import dev.shiori.domain.enums.StatusCatalogo;
+import dev.shiori.domain.enums.StatusPublicacao;
 import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.enums.TipoVoto;
 import dev.shiori.domain.exception.RegraDeNegocioException;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -45,6 +49,22 @@ public class Obra extends EntidadeBase {
 
     @Column
     private Integer totalCapitulosLancados;
+
+    @Column(name = "total_volumes")
+    private Integer totalVolumes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_publicacao", nullable = false)
+    private StatusPublicacao statusPublicacao = StatusPublicacao.EM_LANCAMENTO;
+
+    @Column(name = "anilist_id", length = 50)
+    private String anilistId;
+
+    @Column(name = "mal_id", length = 50)
+    private String malId;
+
+    @Column(name = "mangadex_id", length = 100)
+    private String mangadexId;
 
     @Column
     private Double notaGeral;
@@ -84,6 +104,15 @@ public class Obra extends EntidadeBase {
 
     @OneToMany(mappedBy = "obra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SugestaoEdicaoObra> sugestoesEdicao = new ArrayList<>();
+
+    @ElementCollection(targetClass = AvisoConteudo.class)
+    @CollectionTable(
+            name = "tb_obra_avisos_conteudo",
+            joinColumns = @JoinColumn(name = "obra_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "aviso_conteudo", nullable = false)
+    private Set<AvisoConteudo> avisosConteudo = new HashSet<>();
 
     protected Obra() {
     }
@@ -381,6 +410,51 @@ public class Obra extends EntidadeBase {
         return totalCapitulosLancados;
     }
 
+    public Integer getTotalVolumes() {
+        return totalVolumes;
+    }
+
+    public void atualizarTotalVolumes(Integer totalVolumes) {
+        if (totalVolumes != null && totalVolumes < 0) {
+            throw new RegraDeNegocioException("O total de volumes não pode ser negativo");
+        }
+        this.totalVolumes = totalVolumes;
+    }
+
+    public StatusPublicacao getStatusPublicacao() {
+        return statusPublicacao;
+    }
+
+    public void atualizarStatusPublicacao(StatusPublicacao novoStatus) {
+        if (novoStatus != null) {
+            this.statusPublicacao = novoStatus;
+        }
+    }
+
+    public String getAnilistId() {
+        return anilistId;
+    }
+
+    public void definirAnilistId(String anilistId) {
+        this.anilistId = (anilistId != null && !anilistId.isBlank()) ? anilistId.trim() : null;
+    }
+
+    public String getMalId() {
+        return malId;
+    }
+
+    public void definirMalId(String malId) {
+        this.malId = (malId != null && !malId.isBlank()) ? malId.trim() : null;
+    }
+
+    public String getMangadexId() {
+        return mangadexId;
+    }
+
+    public void definirMangadexId(String mangadexId) {
+        this.mangadexId = (mangadexId != null && !mangadexId.isBlank()) ? mangadexId.trim() : null;
+    }
+
     public Double getNotaGeral() {
         return notaGeral;
     }
@@ -395,6 +469,33 @@ public class Obra extends EntidadeBase {
 
     public Long getCriadoPorUsuarioId() {
         return criadoPorUsuarioId;
+    }
+
+    public Set<AvisoConteudo> getAvisosConteudo() {
+        return Collections.unmodifiableSet(this.avisosConteudo);
+    }
+
+    public void adicionarAvisoConteudo(AvisoConteudo aviso) {
+        if (aviso != null) {
+            this.avisosConteudo.add(aviso);
+        }
+    }
+
+    public void removerAvisoConteudo(AvisoConteudo aviso) {
+        if (aviso != null) {
+            this.avisosConteudo.remove(aviso);
+        }
+    }
+
+    public void definirAvisosConteudo(Set<AvisoConteudo> novosAvisos) {
+        this.avisosConteudo.clear();
+        if (novosAvisos != null) {
+            for (AvisoConteudo aviso : novosAvisos) {
+                if (aviso != null) {
+                    this.avisosConteudo.add(aviso);
+                }
+            }
+        }
     }
 
     @Override

@@ -3,7 +3,9 @@ package dev.shiori.domain.model;
 import java.time.LocalDateTime;
 
 import dev.shiori.domain.exception.RegraDeNegocioException;
+import dev.shiori.infra.crypto.SensitiveDataCryptoConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -36,7 +38,8 @@ public class ConsentimentoUsuario extends EntidadeBase {
     @Column(nullable = false)
     private boolean cookiesFuncionais = false;
 
-    @Column(length = 45)
+    @Convert(converter = SensitiveDataCryptoConverter.class)
+    @Column(length = 255)
     private String ipOrigem;
 
     @Column(length = 255)

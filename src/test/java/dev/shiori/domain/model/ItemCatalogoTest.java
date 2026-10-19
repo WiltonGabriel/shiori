@@ -149,4 +149,26 @@ class ItemCatalogoTest {
         assertThat(itemPublico.obterUrlLeituraSensivel(estranho)).isNull();
         assertThat(itemPublico.obterUrlLeituraSensivel(null)).isNull();
     }
+
+    @Test
+    @DisplayName("Deve atualizar volume atual respeitando regras e total de volumes da obra")
+    void deveAtualizarVolumeAtualComSucesso() {
+        obra.atualizarTotalVolumes(12);
+        ItemCatalogo item = new ItemCatalogo(proprietario, obra, Visibilidade.PUBLICO, StatusLeitura.LENDO);
+
+        item.atualizarVolumeAtual(3.0);
+        assertThat(item.getVolumeAtual()).isEqualTo(3.0);
+
+        item.atualizarProgresso(45.0, 4.0);
+        assertThat(item.getProgressoAtual()).isEqualTo(45.0);
+        assertThat(item.getVolumeAtual()).isEqualTo(4.0);
+
+        assertThatThrownBy(() -> item.atualizarVolumeAtual(15.0))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("não pode exceder o total de volumes");
+
+        assertThatThrownBy(() -> item.atualizarVolumeAtual(-1.0))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("não pode ser nulo ou negativo");
+    }
 }

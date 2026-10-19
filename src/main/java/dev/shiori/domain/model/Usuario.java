@@ -50,6 +50,9 @@ public class Usuario extends EntidadeBase {
     @Column(nullable = false)
     private LocalDateTime dataCriacao;
 
+    @Column(name = "ultima_atualizacao", nullable = false)
+    private LocalDateTime ultimaAtualizacao;
+
     @Column(nullable = false)
     private boolean onboardingConcluido = false;
 
@@ -90,6 +93,7 @@ public class Usuario extends EntidadeBase {
         this.senha = senha;
         this.fusoHorario = "America/Sao_Paulo";
         this.dataCriacao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
         this.onboardingConcluido = false;
         this.ativo = true;
         this.role = Role.ROLE_USER;
@@ -115,6 +119,7 @@ public class Usuario extends EntidadeBase {
         this.fotoUrl = fotoUrl;
         this.descricao = descricao;
         this.onboardingConcluido = true;
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public void atualizarPerfil(String novoApelido, String novaFotoUrl, String novaDescricao, String novoFusoHorario) {
@@ -130,6 +135,12 @@ public class Usuario extends EntidadeBase {
         if (novoFusoHorario != null && !novoFusoHorario.isBlank()) {
             this.fusoHorario = novoFusoHorario.trim();
         }
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void atualizarFotoUrl(String fotoUrl) {
+        this.fotoUrl = fotoUrl;
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public ConexaoUsuario solicitarConexaoCom(Usuario destinatario) {
@@ -361,6 +372,10 @@ public class Usuario extends EntidadeBase {
 
     public LocalDateTime getDataCriacao() {
         return dataCriacao;
+    }
+
+    public LocalDateTime getUltimaAtualizacao() {
+        return ultimaAtualizacao;
     }
 
     public boolean isOnboardingConcluido() {
