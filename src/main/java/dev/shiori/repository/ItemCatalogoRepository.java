@@ -37,4 +37,8 @@ public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Long
     List<ItemCatalogo> findByObraId(Long obraId);
 
     long countByUsuarioId(Long usuarioId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM ItemCatalogo i WHERE i.usuario.id = :usuarioId")
+    void deletarPorUsuarioId(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
 }

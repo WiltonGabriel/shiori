@@ -169,4 +169,89 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.apelido").value("avatar_leitor"))
                 .andExpect(jsonPath("$.ativo").value(true));
     }
+
+    @Autowired
+    private dev.shiori.repository.ObraRepository obraRepository;
+
+    @Autowired
+    private dev.shiori.repository.ItemCatalogoRepository itemCatalogoRepository;
+
+    @Autowired
+    private dev.shiori.repository.ConexaoUsuarioRepository conexaoUsuarioRepository;
+
+    @Test
+    @DisplayName("GET /api/usuarios/{username}/perfil deve filtrar visibilidade rigorosamente (PUBLICO vs RESTRITO vs PRIVADO)")
+    void deveFiltrarVisibilidadeRigorosamente() throws Exception {
+        Usuario dono = usuarioRepository.findById(usuarioId).orElseThrow();
+
+        // Cria 3 obras
+        dev.shiori.domain.model.Obra obraPublica = obraRepository.save(new dev.shiori.domain.model.Obra("Obra Publica", null, null, null, 10, dev.shiori.domain.enums.TipoObra.MANGA));
+        dev.shiori.domain.model.Obra obraRestrita = obraRepository.save(new dev.shiori.domain.model.Obra("Obra Restrita", null, null, null, 10, dev.shiori.domain.enums.TipoObra.MANGA));
+        dev.shiori.domain.model.Obra obraPrivada = obraRepository.save(new dev.shiori.domain.model.Obra("Obra Privada", null, null, null, 10, dev.shiori.domain.enums.TipoObra.MANGA));
+
+        // Adiciona à estante do dono
+        itemCatalogoRepository.save(new dev.shiori.domain.model.ItemCatalogo(dono, obraPublica, dev.shiori.domain.enums.Visibilidade.PUBLICO, dev.shiori.domain.enums.StatusLeitura.LENDO, "https://link-publico.com"));
+        itemCatalogoRepository.save(new dev.shiori.domain.model.ItemCatalogo(dono, obraRestrita, dev.shiori.domain.enums.Visibilidade.RESTRITO, dev.shiori.domain.enums.StatusLeitura.LENDO, "https://link-restrito.com"));
+        itemCatalogoRepository.save(new dev.shiori.domain.model.ItemCatalogo(dono, obraPrivada, dev.shiori.domain.enums.Visibilidade.PRIVADO, dev.shiori.domain.enums.StatusLeitura.LENDO, "https://link-privado.com"));
+
+        // 1. Visitante anônimo (sem auth): enxerga APENAS a obra pública
+        mockMvc.perform(get("/api/usuarios/avatar_leitor/perfil"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.apelido").value("avatar_leitor"))
+                .andExpect(jsonPath("$.saoConexoes").value(false))
+                .andExpect(jsonPath("$.estante.totalElements").value(1))
+                .andExpect(jsonPath("$.estante.content[0].obraTitulo").value("Obra Publica"))
+                // urlLeitura mascarada para null
+                .andExpect(jsonPath("$.estante.content[0].urlLeitura").doesNotExist());
+
+        // 2. Cria um amigo, conecta com o dono (ACEITA)
+        String regAmigo = """
+                {
+                    "email": "amigo.visivel@shiori.dev",
+                    "senha": "senhaSegura123",
+                    "apelido": "amigo_visivel"
+                }
+                """;
+        MvcResult resAmigo = mockMvc.perform(post("/api/auth/registrar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(regAmigo))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String tokenAmigo = resAmigo.getResponse().getContentAsString().split("\"token\":\"")[1].split("\"")[0];
+        Long amigoId = Long.parseLong(resAmigo.getResponse().getContentAsString().split("\"usuarioId\":")[1].split(",")[0]);
+
+        Usuario amigo = usuarioRepository.findById(amigoId).orElseThrow();
+        dev.shiori.domain.model.ConexaoUsuario conexao = new dev.shiori.domain.model.ConexaoUsuario(dono, amigo);
+        conexao.aceitar();
+        conexaoUsuarioRepository.save(conexao);
+
+        // Amigo conectado: enxerga PUBLICO e RESTRITO (2 obras)
+        mockMvc.perform(get("/api/usuarios/avatar_leitor/perfil")
+                        .header("Authorization", "Bearer " + tokenAmigo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.saoConexoes").value(true))
+                .andExpect(jsonPath("$.estante.totalElements").value(2))
+                .andExpect(jsonPath("$.estante.content[0].urlLeitura").doesNotExist());
+
+        // 3. O próprio dono: enxerga PUBLICO, RESTRITO e PRIVADO (3 obras), com urlLeitura visível
+        mockMvc.perform(get("/api/usuarios/avatar_leitor/perfil")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estante.totalElements").value(3))
+                .andExpect(jsonPath("$.estante.content[?(@.visibilidade == 'PRIVADO')].obraTitulo").value("Obra Privada"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/usuarios/me deve anonimizar a conta em conformidade com a LGPD")
+    void deveExcluirEAnonimizarContaLGPD() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/usuarios/me")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isNoContent());
+
+        Usuario usuarioAnonimizado = usuarioRepository.findById(usuarioId).orElseThrow();
+        assertThat(usuarioAnonimizado.isAtivo()).isFalse();
+        assertThat(usuarioAnonimizado.getEmail()).contains("@anon.shiori.dev");
+        assertThat(usuarioAnonimizado.getSenha()).isEqualTo("CONTA_EXCLUIDA");
+        assertThat(usuarioAnonimizado.getApelido()).contains("excluido_");
+    }
 }

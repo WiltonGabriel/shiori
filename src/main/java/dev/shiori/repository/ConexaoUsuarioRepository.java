@@ -38,4 +38,8 @@ public interface ConexaoUsuarioRepository extends JpaRepository<ConexaoUsuario, 
 
     @EntityGraph(attributePaths = {"recebedor"})
     List<ConexaoUsuario> findBySolicitanteIdAndStatus(Long solicitanteId, StatusConexao status);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM ConexaoUsuario c WHERE c.solicitante.id = :usuarioId OR c.recebedor.id = :usuarioId")
+    void deletarTodasConexoesDoUsuario(@Param("usuarioId") Long usuarioId);
 }

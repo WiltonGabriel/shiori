@@ -25,4 +25,8 @@ public interface HistoricoLeituraRepository extends JpaRepository<HistoricoLeitu
 
     @Query("SELECT h FROM HistoricoLeitura h JOIN h.itemCatalogo i WHERE i.usuario.id = :usuarioId AND YEAR(h.dataLeitura) = :ano ORDER BY h.dataLeitura ASC")
     List<HistoricoLeitura> findByUsuarioIdEAno(@Param("usuarioId") Long usuarioId, @Param("ano") int ano);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM HistoricoLeitura h WHERE h.itemCatalogo.id IN (SELECT i.id FROM ItemCatalogo i WHERE i.usuario.id = :usuarioId)")
+    void deletarPorUsuarioId(@Param("usuarioId") Long usuarioId);
 }

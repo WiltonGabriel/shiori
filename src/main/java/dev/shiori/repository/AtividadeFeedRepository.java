@@ -16,4 +16,12 @@ public interface AtividadeFeedRepository extends JpaRepository<AtividadeFeed, Lo
 
     @EntityGraph(attributePaths = {"usuario", "obra", "itemCatalogo"})
     Page<AtividadeFeed> findByUsuarioIdOrderByDataCriacaoDesc(Long usuarioId, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM AtividadeFeed a WHERE a.usuario.id = :usuarioId")
+    void deletarPorUsuarioId(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE AtividadeFeed a SET a.itemCatalogo = null WHERE a.itemCatalogo.id IN (SELECT i.id FROM ItemCatalogo i WHERE i.usuario.id = :usuarioId)")
+    void desvincularItemCatalogoPorUsuarioId(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
 }

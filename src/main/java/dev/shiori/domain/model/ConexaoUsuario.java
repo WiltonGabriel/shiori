@@ -89,7 +89,17 @@ public class ConexaoUsuario extends EntidadeBase {
         if (usuario == null) {
             return false;
         }
-        return usuario.equals(solicitante) || usuario.equals(recebedor);
+        return (usuario.getId() != null && envolveId(usuario.getId()))
+                || usuario.equals(solicitante)
+                || usuario.equals(recebedor);
+    }
+
+    public boolean envolveId(Long usuarioId) {
+        if (usuarioId == null) {
+            return false;
+        }
+        return (solicitante != null && usuarioId.equals(solicitante.getId()))
+                || (recebedor != null && usuarioId.equals(recebedor.getId()));
     }
 
     public Usuario obterOutroUsuario(Usuario usuario) {

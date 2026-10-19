@@ -29,4 +29,8 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
 
     @EntityGraph(attributePaths = {"generos", "tags"})
     List<Obra> findByTipoObra(TipoObra tipoObra);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE Obra o SET o.criadoPorUsuarioId = null WHERE o.criadoPorUsuarioId = :usuarioId")
+    void desvincularCriador(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
 }

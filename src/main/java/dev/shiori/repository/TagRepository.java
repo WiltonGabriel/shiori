@@ -18,4 +18,8 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     List<Tag> findByNomeContainingIgnoreCase(String termo);
 
     Page<Tag> findByNomeContainingIgnoreCase(String termo, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE Tag t SET t.criadoPorUsuarioId = null WHERE t.criadoPorUsuarioId = :usuarioId")
+    void desvincularCriador(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
 }
