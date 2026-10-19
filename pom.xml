@@ -12,7 +12,7 @@
 	<artifactId>shiori</artifactId>
 	<version>0.0.2-alpha</version>
 	<name>Shiori API</name>
-	<description>Back-end e API REST da rede social de leitura Shiori</description>
+	<description>Back-end e API REST da Catálogo de Leituras Shiori</description>
 	<properties>
 		<java.version>25</java.version>
 	</properties>

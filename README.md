@@ -1,6 +1,6 @@
 # Shiori API 栞
 
-> Back-end robusto e API REST da rede social de leitura **Shiori**, focada em acompanhamento de ciclos de leitura, curadoria comunitária de obras literárias e privacidade por design (Privacy by Design).
+> Back-end robusto e API REST da Catálogo de Leituras **Shiori**, focada em acompanhamento de ciclos de leitura, curadoria comunitária de obras literárias e privacidade por design (Privacy by Design).
 
 ---
 
