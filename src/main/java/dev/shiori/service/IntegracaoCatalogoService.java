@@ -3,6 +3,7 @@ package dev.shiori.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -13,15 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.exception.RecursoNaoEncontradoException;
 import dev.shiori.domain.exception.RegraDeNegocioException;
+import dev.shiori.domain.model.Obra;
 import dev.shiori.domain.model.ProvedorIntegracao;
 import dev.shiori.infra.integration.ClienteIntegracaoExterna;
 import dev.shiori.infra.integration.IntegracaoMetadadosObra;
 import dev.shiori.infra.integration.ProvedorIntegracaoFactory;
+import dev.shiori.repository.ObraRepository;
 import dev.shiori.repository.ProvedorIntegracaoRepository;
 
 /**
- * Serviço de orquestração de buscas e consumo de metadados em provedores externos (AniList, MangaDex, Open Library).
- * Garante alta resiliência (fault-tolerance): falhas individuais ou limites de cota não travam a busca global.
+ * Serviço de orquestração de buscas e consumo de metadados em provedores externos (AniList, MangaDex, Open Library, Kitsu).
+ * Garante alta resiliência (fault-tolerance), cache persistente defensivo e cópia local no Hub.
  */
 @Service
 @Transactional
@@ -31,16 +34,19 @@ public class IntegracaoCatalogoService {
 
     private final ProvedorIntegracaoRepository provedorIntegracaoRepository;
     private final ProvedorIntegracaoFactory provedorIntegracaoFactory;
+    private final ObraRepository obraRepository;
 
-    public IntegracaoCatalogoService(ProvedorIntegracaoRepository provedorIntegracaoRepository,
-                                     ProvedorIntegracaoFactory provedorIntegracaoFactory) {
+    public IntegracaoCatalogoService(
+            ProvedorIntegracaoRepository provedorIntegracaoRepository,
+            ProvedorIntegracaoFactory provedorIntegracaoFactory,
+            ObraRepository obraRepository) {
         this.provedorIntegracaoRepository = provedorIntegracaoRepository;
         this.provedorIntegracaoFactory = provedorIntegracaoFactory;
+        this.obraRepository = obraRepository;
     }
 
     /**
-     * Consulta os provedores externos ativos de forma resiliente, agregando sugestões para o cadastro de obras.
-     * Caso um provedor falhe ou esteja com limite diário esgotado, a consulta continua com os demais.
+     * Consulta os provedores externos ativos de forma resiliente, persistindo cópia defensiva no banco interno do Hub.
      */
     public List<IntegracaoMetadadosObra> pesquisarEmProvedoresExternos(String termo, Integer limite, Set<TipoObra> formatosPermitidos) {
         if (termo == null || termo.trim().isBlank()) {
@@ -71,6 +77,12 @@ public class IntegracaoCatalogoService {
                         TipoObra tipo = TipoObra.fromString(item.tipoObra());
                         if (formatosPermitidos == null || formatosPermitidos.isEmpty() || (tipo != null && formatosPermitidos.contains(tipo))) {
                             agregados.add(item);
+                            // Cópia defensiva imediata no Hub
+                            try {
+                                salvarOuAtualizarCopiaDefensiva(item);
+                            } catch (Exception ex) {
+                                log.warn("CÓPIA DEFENSIVA: Falha ao persistir obra externa '{}': {}", item.tituloPrincipal(), ex.getMessage());
+                            }
                         }
                     }
                 }
@@ -100,6 +112,15 @@ public class IntegracaoCatalogoService {
             ClienteIntegracaoExterna cliente = provedorIntegracaoFactory.obterCliente(codigoProvedor);
             IntegracaoMetadadosObra metadados = cliente.buscarObraPorIdExterno(provedor, idExterno);
             provedorIntegracaoRepository.save(provedor);
+
+            if (metadados != null) {
+                try {
+                    salvarOuAtualizarCopiaDefensiva(metadados);
+                } catch (Exception ex) {
+                    log.warn("CÓPIA DEFENSIVA: Falha ao persistir metadados detalhados de '{}': {}", metadados.tituloPrincipal(), ex.getMessage());
+                }
+            }
+
             return metadados;
         } catch (RegraDeNegocioException | RecursoNaoEncontradoException e) {
             throw e;
@@ -109,6 +130,61 @@ public class IntegracaoCatalogoService {
                     "O provedor " + codigoProvedor + " está temporariamente indisponível. Tente novamente em instantes.",
                     org.springframework.http.HttpStatus.BAD_GATEWAY
             );
+        }
+    }
+
+    @Transactional
+    public Obra salvarOuAtualizarCopiaDefensiva(IntegracaoMetadadosObra item) {
+        if (item == null || item.tituloPrincipal() == null || item.tituloPrincipal().isBlank()) {
+            return null;
+        }
+
+        String provedor = item.provedorCodigo() != null ? item.provedorCodigo().toLowerCase() : "";
+        Optional<Obra> existente = Optional.empty();
+
+        if (provedor.contains("mangadex")) {
+            existente = obraRepository.findByMangadexId(item.idExterno());
+        } else if (provedor.contains("anilist")) {
+            existente = obraRepository.findByAnilistId(item.idExterno());
+        } else if (provedor.contains("kitsu")) {
+            existente = obraRepository.findByKitsuId(item.idExterno());
+        } else if (provedor.contains("openlibrary")) {
+            existente = obraRepository.findByIsbn(item.idExterno());
+        }
+
+        if (existente.isEmpty()) {
+            existente = obraRepository.findByTituloPrincipalIgnoreCase(item.tituloPrincipal().trim());
+        }
+
+        TipoObra tipo = TipoObra.fromString(item.tipoObra());
+        if (tipo == null) {
+            tipo = TipoObra.MANGA;
+        }
+
+        if (existente.isPresent()) {
+            Obra obra = existente.get();
+            obra.atualizarSincronizacaoExterna(item.totalCapitulosLancados(), item.totalVolumes());
+            return obraRepository.save(obra);
+        } else {
+            Obra novaObra = new Obra(
+                    item.tituloPrincipal().trim(),
+                    item.tituloOriginal(),
+                    item.capaUrl(),
+                    item.sinopse(),
+                    item.totalCapitulosLancados(),
+                    tipo
+            );
+            novaObra.promoverParaOficial();
+            String mangadexId = provedor.contains("mangadex") ? item.idExterno() : null;
+            String anilistId = provedor.contains("anilist") ? item.idExterno() : null;
+            String kitsuId = provedor.contains("kitsu") ? item.idExterno() : null;
+            String isbn = provedor.contains("openlibrary") ? item.idExterno() : null;
+            String origem = !provedor.isBlank() ? provedor.toUpperCase() : "EXTERNO";
+
+            novaObra.definirIdentificadoresExternos(mangadexId, anilistId, kitsuId, isbn, origem);
+            log.info("CÓPIA DEFENSIVA: Obra externa '{}' gravada no Hub com origem [{}]",
+                    novaObra.getTituloPrincipal(), origem);
+            return obraRepository.save(novaObra);
         }
     }
 }

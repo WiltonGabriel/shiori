@@ -23,8 +23,29 @@ public record ItemCatalogoResponse(
         Double mediaAvaliacaoCiclos,
         LocalDateTime dataAdicao,
         LocalDateTime ultimaAtualizacao,
-        List<HistoricoLeituraResponse> historicosLeitura
+        List<HistoricoLeituraResponse> historicosLeitura,
+        String tipoObra,
+        Boolean sincronizarMetadados,
+        Boolean temNovosCapitulos,
+        Integer totalCapitulosGlobal,
+        Boolean desvinculado
 ) {
+    public String titulo() {
+        return obraTitulo();
+    }
+
+    public String capaUrl() {
+        return obraCapaUrl();
+    }
+
+    public Integer totalCapitulos() {
+        return obraTotalCapitulos();
+    }
+
+    public Integer totalVolumes() {
+        return obraTotalVolumes();
+    }
+
     public static ItemCatalogoResponse aPartirDe(ItemCatalogo item, boolean incluirUrlLeitura) {
         List<HistoricoLeituraResponse> historicos = item.getHistoricosLeitura() != null
                 ? item.getHistoricosLeitura().stream().map(HistoricoLeituraResponse::aPartirDe).toList()
@@ -33,10 +54,10 @@ public record ItemCatalogoResponse(
         return new ItemCatalogoResponse(
                 item.getId(),
                 item.getObra() != null ? item.getObra().getId() : null,
-                item.getObra() != null ? item.getObra().getTituloPrincipal() : null,
-                item.getObra() != null ? item.getObra().getCapaUrl() : null,
-                item.getObra() != null ? item.getObra().getTotalCapitulosLancados() : null,
-                item.getObra() != null ? item.getObra().getTotalVolumes() : null,
+                item.getTitulo(),
+                item.getCapaUrl(),
+                item.getTotalCapitulos(),
+                item.getTotalVolumes(),
                 item.getProgressoAtual(),
                 item.getVolumeAtual(),
                 item.getStatusLeitura(),
@@ -46,7 +67,12 @@ public record ItemCatalogoResponse(
                 item.getMediaAvaliacaoCiclos(),
                 item.getDataAdicao(),
                 item.getUltimaAtualizacao(),
-                historicos
+                historicos,
+                item.getTipoObra() != null ? item.getTipoObra().name() : null,
+                item.isSincronizarMetadados(),
+                item.temNovosCapitulosDisponiveis(),
+                item.getObra() != null ? item.getObra().getTotalCapitulosLancados() : null,
+                item.getObra() == null
         );
     }
 }

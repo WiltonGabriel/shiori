@@ -37,6 +37,24 @@ public class AtividadeFeed extends EntidadeBase {
     @Column(nullable = false, length = 500)
     private String descricao;
 
+    @Column(name = "usuario_apelido_snapshot", length = 100)
+    private String usuarioApelidoSnapshot;
+
+    @Column(name = "usuario_foto_url_snapshot", length = 500)
+    private String usuarioFotoUrlSnapshot;
+
+    @Column(name = "obra_titulo_snapshot", length = 200)
+    private String obraTituloSnapshot;
+
+    @Column(name = "obra_capa_url_snapshot", length = 500)
+    private String obraCapaUrlSnapshot;
+
+    @Column(name = "capitulo_snapshot")
+    private Double capituloSnapshot;
+
+    @Column(name = "nota_snapshot")
+    private Double notaSnapshot;
+
     @Column(nullable = false)
     private LocalDateTime dataCriacao;
 
@@ -49,6 +67,19 @@ public class AtividadeFeed extends EntidadeBase {
             Obra obra,
             ItemCatalogo itemCatalogo,
             String descricao) {
+        this(usuario, tipoAtividade, obra, itemCatalogo, descricao, null, null, null, null);
+    }
+
+    public AtividadeFeed(
+            Usuario usuario,
+            TipoAtividadeFeed tipoAtividade,
+            Obra obra,
+            ItemCatalogo itemCatalogo,
+            String descricao,
+            String obraTituloSnapshot,
+            String obraCapaUrlSnapshot,
+            Double capituloSnapshot,
+            Double notaSnapshot) {
         if (usuario == null) {
             throw new RegraDeNegocioException("O usuário autor da atividade é obrigatório");
         }
@@ -64,6 +95,19 @@ public class AtividadeFeed extends EntidadeBase {
         this.obra = obra;
         this.itemCatalogo = itemCatalogo;
         this.descricao = descricao.trim();
+        this.usuarioApelidoSnapshot = usuario.getApelidoOuEmail();
+        this.usuarioFotoUrlSnapshot = usuario.getFotoUrl();
+
+        this.obraTituloSnapshot = (obraTituloSnapshot != null && !obraTituloSnapshot.isBlank())
+                ? obraTituloSnapshot.trim()
+                : (obra != null ? obra.getTituloPrincipal() : (itemCatalogo != null ? itemCatalogo.getTitulo() : null));
+
+        this.obraCapaUrlSnapshot = (obraCapaUrlSnapshot != null && !obraCapaUrlSnapshot.isBlank())
+                ? obraCapaUrlSnapshot.trim()
+                : (obra != null ? obra.getCapaUrl() : (itemCatalogo != null ? itemCatalogo.getCapaUrl() : null));
+
+        this.capituloSnapshot = capituloSnapshot;
+        this.notaSnapshot = notaSnapshot;
         this.dataCriacao = LocalDateTime.now();
     }
 
@@ -110,6 +154,50 @@ public class AtividadeFeed extends EntidadeBase {
 
     public String getDescricao() {
         return descricao;
+    }
+
+    public String getUsuarioApelidoSnapshot() {
+        return usuarioApelidoSnapshot;
+    }
+
+    public String getUsuarioFotoUrlSnapshot() {
+        return usuarioFotoUrlSnapshot;
+    }
+
+    public String getObraTituloSnapshot() {
+        return obraTituloSnapshot;
+    }
+
+    public String getObraCapaUrlSnapshot() {
+        return obraCapaUrlSnapshot;
+    }
+
+    public Double getCapituloSnapshot() {
+        return capituloSnapshot;
+    }
+
+    public Double getNotaSnapshot() {
+        return notaSnapshot;
+    }
+
+    public String getUsuarioApelido() {
+        return usuarioApelidoSnapshot != null ? usuarioApelidoSnapshot
+                : (usuario != null ? usuario.getApelidoOuEmail() : "Leitor");
+    }
+
+    public String getUsuarioFotoUrl() {
+        return usuarioFotoUrlSnapshot != null ? usuarioFotoUrlSnapshot
+                : (usuario != null ? usuario.getFotoUrl() : null);
+    }
+
+    public String getObraTitulo() {
+        return obraTituloSnapshot != null ? obraTituloSnapshot
+                : (obra != null ? obra.getTituloPrincipal() : (itemCatalogo != null ? itemCatalogo.getTitulo() : "Obra"));
+    }
+
+    public String getObraCapaUrl() {
+        return obraCapaUrlSnapshot != null ? obraCapaUrlSnapshot
+                : (obra != null ? obra.getCapaUrl() : (itemCatalogo != null ? itemCatalogo.getCapaUrl() : null));
     }
 
     public LocalDateTime getDataCriacao() {

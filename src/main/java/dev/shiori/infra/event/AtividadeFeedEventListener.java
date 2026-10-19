@@ -56,12 +56,21 @@ public class AtividadeFeedEventListener {
                 ? itemCatalogoRepository.findById(evento.itemCatalogoId()).orElse(null)
                 : null;
 
+        String obraTitulo = evento.obraTituloSnapshot() != null ? evento.obraTituloSnapshot()
+                : (obra != null ? obra.getTituloPrincipal() : (item != null ? item.getTitulo() : null));
+        String obraCapa = evento.obraCapaUrlSnapshot() != null ? evento.obraCapaUrlSnapshot()
+                : (obra != null ? obra.getCapaUrl() : (item != null ? item.getCapaUrl() : null));
+
         AtividadeFeed atividade = new AtividadeFeed(
                 usuario,
                 evento.tipoAtividade(),
                 obra,
                 item,
-                evento.descricao()
+                evento.descricao(),
+                obraTitulo,
+                obraCapa,
+                evento.capituloSnapshot(),
+                evento.notaSnapshot()
         );
 
         atividadeFeedRepository.save(atividade);

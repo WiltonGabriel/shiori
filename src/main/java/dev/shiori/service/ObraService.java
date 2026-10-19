@@ -16,6 +16,8 @@ import dev.shiori.domain.model.Usuario;
 import dev.shiori.dto.ObraCadastroRequest;
 import dev.shiori.dto.ObraResponse;
 import dev.shiori.dto.ResultadoBuscaObrasResponse;
+import dev.shiori.repository.AtividadeFeedRepository;
+import dev.shiori.repository.ItemCatalogoRepository;
 import dev.shiori.repository.ObraRepository;
 import dev.shiori.repository.UsuarioRepository;
 
@@ -25,10 +27,23 @@ public class ObraService {
 
     private final ObraRepository obraRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ItemCatalogoRepository itemCatalogoRepository;
+    private final AtividadeFeedRepository atividadeFeedRepository;
 
-    public ObraService(ObraRepository obraRepository, UsuarioRepository usuarioRepository) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public ObraService(
+            ObraRepository obraRepository,
+            UsuarioRepository usuarioRepository,
+            ItemCatalogoRepository itemCatalogoRepository,
+            AtividadeFeedRepository atividadeFeedRepository) {
         this.obraRepository = obraRepository;
         this.usuarioRepository = usuarioRepository;
+        this.itemCatalogoRepository = itemCatalogoRepository;
+        this.atividadeFeedRepository = atividadeFeedRepository;
+    }
+
+    public ObraService(ObraRepository obraRepository, UsuarioRepository usuarioRepository) {
+        this(obraRepository, usuarioRepository, null, null);
     }
 
     @Transactional
@@ -168,6 +183,13 @@ public class ObraService {
     public void excluirObra(Long obraId) {
         if (!obraRepository.existsById(obraId)) {
             throw new RecursoNaoEncontradoException("Obra não encontrada com ID: " + obraId);
+        }
+        // Soberania da estante: Desvincula itens da estante e atividades sociais sem apagar dados locais do leitor
+        if (itemCatalogoRepository != null) {
+            itemCatalogoRepository.desvincularObra(obraId);
+        }
+        if (atividadeFeedRepository != null) {
+            atividadeFeedRepository.desvincularObra(obraId);
         }
         obraRepository.deleteById(obraId);
     }

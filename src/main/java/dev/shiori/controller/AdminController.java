@@ -358,4 +358,62 @@ public class AdminController {
         Page<RegistroAuditoriaResponse> auditoria = adminService.listarAuditoria(pageable, adminLogado.getId());
         return ResponseEntity.ok(auditoria);
     }
+
+    // ==========================================
+    // 9. GESTÃO DE INSTÂNCIAS PAREADAS (HANDSHAKE)
+    // ==========================================
+
+    @GetMapping("/pareamentos")
+    public ResponseEntity<Page<dev.shiori.dto.hub.PareamentoResponse>> listarPareamentos(
+            @CurrentUser UsuarioPrincipal adminLogado,
+            @RequestParam(required = false) dev.shiori.domain.enums.StatusPareamento status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Page<dev.shiori.dto.hub.PareamentoResponse> response = adminService.listarPareamentos(status, pageable, adminLogado.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/pareamentos/{id}/decisao")
+    public ResponseEntity<dev.shiori.dto.hub.PareamentoResponse> decidirPareamento(
+            @CurrentUser UsuarioPrincipal adminLogado,
+            @PathVariable Long id,
+            @Valid @RequestBody dev.shiori.dto.hub.DecisaoPareamentoRequest request) {
+        dev.shiori.dto.hub.PareamentoResponse response = adminService.decidirPareamento(id, request, adminLogado.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    // ==========================================
+    // 10. FEDERAÇÃO DE HUBS (MESH)
+    // ==========================================
+
+    @GetMapping("/federacao/nos")
+    public ResponseEntity<java.util.List<dev.shiori.dto.federacao.NoFederadoResponse>> listarNosFederados(
+            @CurrentUser UsuarioPrincipal adminLogado) {
+        java.util.List<dev.shiori.dto.federacao.NoFederadoResponse> response = adminService.listarNosFederados(adminLogado.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/federacao/nos")
+    public ResponseEntity<dev.shiori.dto.federacao.NoFederadoResponse> cadastrarNoFederado(
+            @CurrentUser UsuarioPrincipal adminLogado,
+            @Valid @RequestBody dev.shiori.dto.federacao.NoFederadoRequest request) {
+        dev.shiori.dto.federacao.NoFederadoResponse response = adminService.cadastrarNoFederado(request, adminLogado.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/federacao/nos/{id}/status")
+    public ResponseEntity<dev.shiori.dto.federacao.NoFederadoResponse> alternarStatusNoFederado(
+            @CurrentUser UsuarioPrincipal adminLogado,
+            @PathVariable Long id,
+            @RequestParam boolean ativo) {
+        dev.shiori.dto.federacao.NoFederadoResponse response = adminService.alternarStatusNoFederado(id, ativo, adminLogado.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/federacao/nos/{id}")
+    public ResponseEntity<Void> removerNoFederado(
+            @CurrentUser UsuarioPrincipal adminLogado,
+            @PathVariable Long id) {
+        adminService.removerNoFederado(id, adminLogado.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

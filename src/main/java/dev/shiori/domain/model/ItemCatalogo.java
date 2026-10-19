@@ -25,8 +25,7 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(
-        name = "tb_item_catalogo",
-        uniqueConstraints = @UniqueConstraint(name = "uk_item_usuario_obra", columnNames = {"usuario_id", "obra_id"})
+        name = "tb_item_catalogo"
 )
 public class ItemCatalogo extends EntidadeBase {
 
@@ -35,8 +34,27 @@ public class ItemCatalogo extends EntidadeBase {
     private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "obra_id", nullable = false)
+    @JoinColumn(name = "obra_id", nullable = true)
     private Obra obra;
+
+    @Column(length = 200)
+    private String titulo;
+
+    @Column(name = "capa_url", length = 500)
+    private String capaUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_obra")
+    private dev.shiori.domain.enums.TipoObra tipoObra = dev.shiori.domain.enums.TipoObra.MANGA;
+
+    @Column(name = "total_capitulos")
+    private Integer totalCapitulos;
+
+    @Column(name = "total_volumes")
+    private Integer totalVolumes;
+
+    @Column(name = "sincronizar_metadados", nullable = false)
+    private boolean sincronizarMetadados = true;
 
     @Column(nullable = false)
     private Double progressoAtual = 0.0;
@@ -81,9 +99,16 @@ public class ItemCatalogo extends EntidadeBase {
 
         this.usuario = usuario;
         this.obra = obra;
+        this.titulo = obra.getTituloPrincipal();
+        this.capaUrl = obra.getCapaUrl();
+        this.tipoObra = obra.getTipoObra() != null ? obra.getTipoObra() : dev.shiori.domain.enums.TipoObra.MANGA;
+        this.totalCapitulos = obra.getTotalCapitulosLancados();
+        this.totalVolumes = obra.getTotalVolumes();
+        this.sincronizarMetadados = true;
         this.visibilidade = visibilidade != null ? visibilidade : Visibilidade.RESTRITO;
         this.statusLeitura = statusLeitura != null ? statusLeitura : StatusLeitura.LENDO;
         this.progressoAtual = 0.0;
+        this.volumeAtual = 0.0;
         this.dataAdicao = LocalDateTime.now();
         this.ultimaAtualizacao = LocalDateTime.now();
     }
@@ -93,6 +118,72 @@ public class ItemCatalogo extends EntidadeBase {
         this.urlLeitura = (urlLeitura != null && !urlLeitura.isBlank()) ? urlLeitura.trim() : null;
     }
 
+    public ItemCatalogo(
+            Usuario usuario,
+            Obra obra,
+            String tituloPersonalizado,
+            String capaPersonalizada,
+            dev.shiori.domain.enums.TipoObra tipoObra,
+            Integer totalCapitulos,
+            Integer totalVolumes,
+            Double capituloInicial,
+            Double volumeInicial,
+            Visibilidade visibilidade,
+            StatusLeitura statusLeitura,
+            String urlLeitura,
+            Boolean sincronizarMetadados) {
+        if (usuario == null) {
+            throw new RegraDeNegocioException("O usuário proprietário do item é obrigatório");
+        }
+        this.usuario = usuario;
+        this.obra = obra;
+
+        String tituloFinal = (tituloPersonalizado != null && !tituloPersonalizado.isBlank())
+                ? tituloPersonalizado.trim()
+                : (obra != null ? obra.getTituloPrincipal() : null);
+        if (tituloFinal == null || tituloFinal.isBlank()) {
+            throw new RegraDeNegocioException("O título da obra na estante é obrigatório");
+        }
+        this.titulo = tituloFinal;
+
+        this.capaUrl = (capaPersonalizada != null && !capaPersonalizada.isBlank())
+                ? capaPersonalizada.trim()
+                : (obra != null ? obra.getCapaUrl() : null);
+
+        this.tipoObra = tipoObra != null ? tipoObra
+                : (obra != null && obra.getTipoObra() != null ? obra.getTipoObra() : dev.shiori.domain.enums.TipoObra.MANGA);
+
+        this.totalCapitulos = totalCapitulos != null ? totalCapitulos
+                : (obra != null ? obra.getTotalCapitulosLancados() : null);
+
+        this.totalVolumes = totalVolumes != null ? totalVolumes
+                : (obra != null ? obra.getTotalVolumes() : null);
+
+        this.sincronizarMetadados = sincronizarMetadados != null ? sincronizarMetadados : (obra != null);
+        this.visibilidade = visibilidade != null ? visibilidade : Visibilidade.RESTRITO;
+        this.statusLeitura = statusLeitura != null ? statusLeitura : StatusLeitura.LENDO;
+        this.urlLeitura = (urlLeitura != null && !urlLeitura.isBlank()) ? urlLeitura.trim() : null;
+        this.progressoAtual = (capituloInicial != null && capituloInicial >= 0.0) ? capituloInicial : 0.0;
+        this.volumeAtual = (volumeInicial != null && volumeInicial >= 0.0) ? volumeInicial : 0.0;
+        this.dataAdicao = LocalDateTime.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public ItemCatalogo(
+            Usuario usuario,
+            String tituloPersonalizado,
+            String capaPersonalizada,
+            dev.shiori.domain.enums.TipoObra tipoObra,
+            Integer totalCapitulos,
+            Integer totalVolumes,
+            Double capituloInicial,
+            Double volumeInicial,
+            Visibilidade visibilidade,
+            StatusLeitura statusLeitura,
+            String urlLeitura) {
+        this(usuario, null, tituloPersonalizado, capaPersonalizada, tipoObra, totalCapitulos, totalVolumes, capituloInicial, volumeInicial, visibilidade, statusLeitura, urlLeitura, false);
+    }
+
     public String obterUrlLeituraSensivel(Usuario solicitante) {
         if (solicitante != null && this.usuario != null && this.usuario.equals(solicitante)) {
             return this.urlLeitura;
@@ -100,11 +191,79 @@ public class ItemCatalogo extends EntidadeBase {
         return null;
     }
 
+    public void desvincularObraGlobal() {
+        this.obra = null;
+        this.sincronizarMetadados = false;
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void vincularObraGlobal(Obra novaObra, boolean manterSincronizado) {
+        if (novaObra == null) {
+            throw new RegraDeNegocioException("A obra global a ser vinculada é obrigatória");
+        }
+        this.obra = novaObra;
+        this.sincronizarMetadados = manterSincronizado;
+        if (manterSincronizado) {
+            if (this.titulo == null || this.titulo.isBlank()) {
+                this.titulo = novaObra.getTituloPrincipal();
+            }
+            if (this.capaUrl == null || this.capaUrl.isBlank()) {
+                this.capaUrl = novaObra.getCapaUrl();
+            }
+            if (novaObra.getTipoObra() != null) {
+                this.tipoObra = novaObra.getTipoObra();
+            }
+            if (novaObra.getTotalCapitulosLancados() != null) {
+                this.totalCapitulos = novaObra.getTotalCapitulosLancados();
+            }
+            if (novaObra.getTotalVolumes() != null) {
+                this.totalVolumes = novaObra.getTotalVolumes();
+            }
+        }
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public boolean temNovosCapitulosDisponiveis() {
+        if (this.obra != null && this.obra.getTotalCapitulosLancados() != null) {
+            int capitulosSnapshot = this.totalCapitulos != null ? this.totalCapitulos : 0;
+            return this.obra.getTotalCapitulosLancados() > capitulosSnapshot;
+        }
+        return false;
+    }
+
+    public void atualizarMetaCapitulosGlobal() {
+        if (this.obra != null && this.obra.getTotalCapitulosLancados() != null) {
+            this.totalCapitulos = this.obra.getTotalCapitulosLancados();
+            this.ultimaAtualizacao = LocalDateTime.now();
+        }
+    }
+
+    public void atualizarSnapshot(String novoTitulo, String novaCapaUrl, dev.shiori.domain.enums.TipoObra novoTipo, Integer novosCapitulos, Integer novosVolumes) {
+        if (novoTitulo != null && !novoTitulo.isBlank()) {
+            this.titulo = novoTitulo.trim();
+        }
+        if (novaCapaUrl != null) {
+            this.capaUrl = novaCapaUrl.trim();
+        }
+        if (novoTipo != null) {
+            this.tipoObra = novoTipo;
+        }
+        if (novosCapitulos != null) {
+            this.totalCapitulos = novosCapitulos;
+        }
+        if (novosVolumes != null) {
+            this.totalVolumes = novosVolumes;
+        }
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
     public void atualizarProgresso(Double novoProgresso) {
         if (novoProgresso == null || novoProgresso < 0.0) {
             throw new RegraDeNegocioException("O progresso de leitura não pode ser nulo ou negativo");
         }
-        if (this.obra.getTotalCapitulosLancados() != null && novoProgresso > this.obra.getTotalCapitulosLancados()) {
+        Integer maxCaps = this.totalCapitulos != null ? this.totalCapitulos
+                : (this.obra != null ? this.obra.getTotalCapitulosLancados() : null);
+        if (maxCaps != null && maxCaps > 0 && novoProgresso > maxCaps) {
             throw new RegraDeNegocioException("O progresso não pode exceder o total de capítulos lançados da obra");
         }
 
@@ -116,7 +275,9 @@ public class ItemCatalogo extends EntidadeBase {
         if (novoVolume == null || novoVolume < 0.0) {
             throw new RegraDeNegocioException("O volume atual não pode ser nulo ou negativo");
         }
-        if (this.obra.getTotalVolumes() != null && novoVolume > this.obra.getTotalVolumes()) {
+        Integer maxVols = this.totalVolumes != null ? this.totalVolumes
+                : (this.obra != null ? this.obra.getTotalVolumes() : null);
+        if (maxVols != null && maxVols > 0 && novoVolume > maxVols) {
             throw new RegraDeNegocioException("O volume atual não pode exceder o total de volumes da obra");
         }
 
@@ -165,6 +326,20 @@ public class ItemCatalogo extends EntidadeBase {
             throw new RegraDeNegocioException("A nova obra é obrigatória para transferência");
         }
         this.obra = novaObra;
+        if (this.sincronizarMetadados) {
+            if (this.titulo == null || this.titulo.isBlank()) {
+                this.titulo = novaObra.getTituloPrincipal();
+            }
+            if (this.capaUrl == null || this.capaUrl.isBlank()) {
+                this.capaUrl = novaObra.getCapaUrl();
+            }
+            if (novaObra.getTipoObra() != null) {
+                this.tipoObra = novaObra.getTipoObra();
+            }
+            if (novaObra.getTotalCapitulosLancados() != null) {
+                this.totalCapitulos = novaObra.getTotalCapitulosLancados();
+            }
+        }
         this.ultimaAtualizacao = LocalDateTime.now();
     }
 
@@ -199,6 +374,13 @@ public class ItemCatalogo extends EntidadeBase {
         this.progressoAtual = capituloAtingido;
         this.ultimaAtualizacao = LocalDateTime.now();
         return ciclo;
+    }
+
+    public void restaurarCicloLeitura(Double capituloInicial, Double capituloFinal, Double notaCiclo, String anotacoes, java.time.LocalDate dataLeitura) {
+        if (capituloInicial != null && capituloFinal != null && capituloFinal > capituloInicial) {
+            HistoricoLeitura ciclo = new HistoricoLeitura(this, capituloInicial, capituloFinal, notaCiclo, anotacoes, dataLeitura);
+            this.historicosLeitura.add(ciclo);
+        }
     }
 
     public boolean isVisivelPara(Usuario visitante, boolean saoConexoes) {
@@ -248,6 +430,42 @@ public class ItemCatalogo extends EntidadeBase {
         return obra;
     }
 
+    public String getTitulo() {
+        return (this.titulo != null && !this.titulo.isBlank())
+                ? this.titulo
+                : (this.obra != null ? this.obra.getTituloPrincipal() : "Obra Sem Título");
+    }
+
+    public String getCapaUrl() {
+        return (this.capaUrl != null && !this.capaUrl.isBlank())
+                ? this.capaUrl
+                : (this.obra != null ? this.obra.getCapaUrl() : null);
+    }
+
+    public dev.shiori.domain.enums.TipoObra getTipoObra() {
+        return this.tipoObra != null ? this.tipoObra
+                : (this.obra != null && this.obra.getTipoObra() != null ? this.obra.getTipoObra() : dev.shiori.domain.enums.TipoObra.MANGA);
+    }
+
+    public Integer getTotalCapitulos() {
+        return this.totalCapitulos != null ? this.totalCapitulos
+                : (this.obra != null ? this.obra.getTotalCapitulosLancados() : null);
+    }
+
+    public Integer getTotalVolumes() {
+        return this.totalVolumes != null ? this.totalVolumes
+                : (this.obra != null ? this.obra.getTotalVolumes() : null);
+    }
+
+    public boolean isSincronizarMetadados() {
+        return sincronizarMetadados;
+    }
+
+    public void setSincronizarMetadados(boolean sincronizarMetadados) {
+        this.sincronizarMetadados = sincronizarMetadados;
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
     public Double getProgressoAtual() {
         return progressoAtual;
     }
@@ -292,7 +510,7 @@ public class ItemCatalogo extends EntidadeBase {
         if (getId() != null && that.getId() != null) {
             return getId().equals(that.getId());
         }
-        return Objects.equals(usuario, that.usuario) && Objects.equals(obra, that.obra);
+        return Objects.equals(usuario, that.usuario) && Objects.equals(getTitulo(), that.getTitulo());
     }
 
     @Override
@@ -300,6 +518,6 @@ public class ItemCatalogo extends EntidadeBase {
         if (getId() != null) {
             return getId().hashCode();
         }
-        return Objects.hash(usuario, obra);
+        return Objects.hash(usuario, getTitulo());
     }
 }

@@ -1,5 +1,6 @@
 package dev.shiori.domain.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -65,6 +66,18 @@ public class Obra extends EntidadeBase {
 
     @Column(name = "mangadex_id", length = 100)
     private String mangadexId;
+
+    @Column(name = "kitsu_id", length = 100)
+    private String kitsuId;
+
+    @Column(name = "isbn", length = 50)
+    private String isbn;
+
+    @Column(name = "origem_fonte", length = 50)
+    private String origemFonte = "SHIORI_INTERNO";
+
+    @Column(name = "ultima_sincronizacao_externa")
+    private LocalDateTime ultimaSincronizacaoExterna;
 
     @Column
     private Double notaGeral;
@@ -155,6 +168,18 @@ public class Obra extends EntidadeBase {
         return obra;
     }
 
+    public static Obra criarDeFederacao(
+            String tituloPrincipal,
+            String tituloOriginal,
+            String capaUrl,
+            String sinopse,
+            Integer totalCapitulosLancados,
+            TipoObra tipoObra) {
+        Obra obra = new Obra(tituloPrincipal, tituloOriginal, capaUrl, sinopse, totalCapitulosLancados, tipoObra);
+        obra.statusCatalogo = StatusCatalogo.OFICIAL;
+        return obra;
+    }
+
     public void submeterAoCatalogoGlobal(Long usuarioId) {
         if (usuarioId == null) {
             throw new RegraDeNegocioException("O identificador do usuário autor é obrigatório para submeter ao catálogo global");
@@ -163,6 +188,14 @@ public class Obra extends EntidadeBase {
             throw new RegraDeNegocioException("Esta obra já é oficial do catálogo");
         }
         this.criadoPorUsuarioId = usuarioId;
+        this.statusCatalogo = StatusCatalogo.COMUNITARIO;
+    }
+
+    public void submeterAnonimamenteAoCatalogoGlobal() {
+        if (this.statusCatalogo == StatusCatalogo.OFICIAL) {
+            throw new RegraDeNegocioException("Esta obra já é oficial do catálogo");
+        }
+        this.criadoPorUsuarioId = null;
         this.statusCatalogo = StatusCatalogo.COMUNITARIO;
     }
 
@@ -582,6 +615,47 @@ public class Obra extends EntidadeBase {
                 }
             }
         }
+    }
+
+    public String getKitsuId() {
+        return kitsuId;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public String getOrigemFonte() {
+        return origemFonte != null ? origemFonte : "SHIORI_INTERNO";
+    }
+
+    public LocalDateTime getUltimaSincronizacaoExterna() {
+        return ultimaSincronizacaoExterna;
+    }
+
+    public void definirIdentificadoresExternos(String mangadexId, String anilistId, String kitsuId, String isbn, String origemFonte) {
+        if (mangadexId != null && !mangadexId.isBlank()) this.mangadexId = mangadexId.trim();
+        if (anilistId != null && !anilistId.isBlank()) this.anilistId = anilistId.trim();
+        if (kitsuId != null && !kitsuId.isBlank()) this.kitsuId = kitsuId.trim();
+        if (isbn != null && !isbn.isBlank()) this.isbn = isbn.trim();
+        if (origemFonte != null && !origemFonte.isBlank()) this.origemFonte = origemFonte.trim().toUpperCase();
+        this.ultimaSincronizacaoExterna = LocalDateTime.now();
+    }
+
+    public void atualizarSincronizacaoExterna(Integer novosCapitulos, Integer novosVolumes) {
+        if (!this.protegidoContraSync) {
+            if (novosCapitulos != null && novosCapitulos > 0) {
+                if (this.totalCapitulosLancados == null || novosCapitulos > this.totalCapitulosLancados) {
+                    this.totalCapitulosLancados = novosCapitulos;
+                }
+            }
+            if (novosVolumes != null && novosVolumes > 0) {
+                if (this.totalVolumes == null || novosVolumes > this.totalVolumes) {
+                    this.totalVolumes = novosVolumes;
+                }
+            }
+        }
+        this.ultimaSincronizacaoExterna = LocalDateTime.now();
     }
 
     @Override

@@ -43,8 +43,15 @@ application-dev.yml
 # ===================================================================
 # DOCUMENTAÇÃO PRIVADA E PALÁCIO DA MEMÓRIA DA IA (APENAS MEMÓRIA IGNORADA)
 # ===================================================================
-Docs/
 docs/memory/
+docs/memoria/
+
+# ===================================================================
+# CUSTOMIZAÇÕES LOCAIS DO AGENTE IA (SKILLS E REGRAS LOCAIS)
+# ===================================================================
+.agents/
+AGENTS.md
+GEMINI.md
 
 # ===================================================================
 # INFRAESTRUTURA LOCAL, DOCKER & STORAGE DATA

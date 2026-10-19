@@ -37,6 +37,16 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT o FROM Obra o WHERE LOWER(o.tituloPrincipal) LIKE LOWER(CONCAT('%', :termo, '%')) OR (o.tituloOriginal IS NOT NULL AND LOWER(o.tituloOriginal) LIKE LOWER(CONCAT('%', :termo, '%')))")
     List<Obra> pesquisarPorTermo(@org.springframework.data.repository.query.Param("termo") String termo);
 
+    Optional<Obra> findByMangadexId(String mangadexId);
+
+    Optional<Obra> findByAnilistId(String anilistId);
+
+    Optional<Obra> findByKitsuId(String kitsuId);
+
+    Optional<Obra> findByIsbn(String isbn);
+
+    Optional<Obra> findByTituloPrincipalIgnoreCase(String tituloPrincipal);
+
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE Obra o SET o.criadoPorUsuarioId = null WHERE o.criadoPorUsuarioId = :usuarioId")
     void desvincularCriador(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);

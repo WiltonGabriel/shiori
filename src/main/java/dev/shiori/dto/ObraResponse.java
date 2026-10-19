@@ -21,7 +21,25 @@ public record ObraResponse(
         StatusPublicacao statusPublicacao,
         Long criadoPorUsuarioId,
         Set<String> generos,
-        Set<String> tags) {
+        Set<String> tags,
+        String origemFonte) {
+
+    public ObraResponse(
+            Long id,
+            String tituloPrincipal,
+            String tituloOriginal,
+            String capaUrl,
+            String sinopse,
+            Integer totalCapitulosLancados,
+            Double notaGeral,
+            TipoObra tipoObra,
+            StatusCatalogo statusCatalogo,
+            StatusPublicacao statusPublicacao,
+            Long criadoPorUsuarioId,
+            Set<String> generos,
+            Set<String> tags) {
+        this(id, tituloPrincipal, tituloOriginal, capaUrl, sinopse, totalCapitulosLancados, notaGeral, tipoObra, statusCatalogo, statusPublicacao, criadoPorUsuarioId, generos, tags, "SHIORI_INTERNO");
+    }
 
     public static ObraResponse fromEntity(Obra obra) {
         Set<String> generos = new HashSet<>();
@@ -55,7 +73,8 @@ public record ObraResponse(
                 obra.getStatusPublicacao(),
                 obra.getCriadoPorUsuarioId(),
                 generos,
-                tags
+                tags,
+                obra.getOrigemFonte() != null ? obra.getOrigemFonte() : "SHIORI_INTERNO"
         );
     }
 }

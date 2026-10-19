@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/*/perfil").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/broadcasts/ativos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/obras", "/obras/**", "/api/obras", "/api/obras/**").permitAll()
+                        .requestMatchers("/api/hub/pareamento/**", "/api/federacao/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
@@ -75,13 +76,36 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${shiori.cors.allowed-origins:*}")
+    private String corsAllowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"));
-        configuration.setExposedHeaders(List.of("Authorization"));
+        
+        if (corsAllowedOrigins == null || corsAllowedOrigins.isBlank() || "*".equals(corsAllowedOrigins.trim())) {
+            configuration.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            List<String> origins = java.util.Arrays.stream(corsAllowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+            configuration.setAllowedOriginPatterns(origins);
+        }
+
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-Requested-With",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "X-Instance-UUID",
+                "X-Client-Version"
+        ));
+        configuration.setExposedHeaders(List.of("Authorization", "Link", "X-Total-Count"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

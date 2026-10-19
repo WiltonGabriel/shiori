@@ -26,7 +26,8 @@ public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Long
     Page<ItemCatalogo> findByUsuarioId(Long usuarioId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"obra"})
-    Page<ItemCatalogo> findByUsuarioIdAndObraTipoObraIn(Long usuarioId, Collection<dev.shiori.domain.enums.TipoObra> tipos, Pageable pageable);
+    @org.springframework.data.jpa.repository.Query("SELECT i FROM ItemCatalogo i WHERE i.usuario.id = :usuarioId AND (i.tipoObra IN :tipos OR (i.tipoObra IS NULL AND i.obra.tipoObra IN :tipos))")
+    Page<ItemCatalogo> findByUsuarioIdAndObraTipoObraIn(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId, @org.springframework.data.repository.query.Param("tipos") Collection<dev.shiori.domain.enums.TipoObra> tipos, Pageable pageable);
 
     @EntityGraph(attributePaths = {"obra"})
     Page<ItemCatalogo> findByUsuarioIdAndStatusLeitura(Long usuarioId, StatusLeitura statusLeitura, Pageable pageable);
@@ -40,7 +41,13 @@ public interface ItemCatalogoRepository extends JpaRepository<ItemCatalogo, Long
     @EntityGraph(attributePaths = {"usuario", "historicosLeitura"})
     List<ItemCatalogo> findByObraId(Long obraId);
 
+    List<ItemCatalogo> findByUsuarioId(Long usuarioId);
+
     long countByUsuarioId(Long usuarioId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE ItemCatalogo i SET i.obra = null, i.sincronizarMetadados = false WHERE i.obra.id = :obraId")
+    void desvincularObra(@org.springframework.data.repository.query.Param("obraId") Long obraId);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("DELETE FROM ItemCatalogo i WHERE i.usuario.id = :usuarioId")

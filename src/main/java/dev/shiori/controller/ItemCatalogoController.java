@@ -82,4 +82,45 @@ public class ItemCatalogoController {
         itemCatalogoService.removerItem(usuarioLogado.getId(), id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/desvincular")
+    public ResponseEntity<ItemCatalogoResponse> desvincularObra(
+            @CurrentUser UsuarioPrincipal usuarioLogado,
+            @PathVariable Long id) {
+        ItemCatalogoResponse response = itemCatalogoService.desvincularObra(usuarioLogado.getId(), id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/vincular")
+    public ResponseEntity<ItemCatalogoResponse> vincularObra(
+            @CurrentUser UsuarioPrincipal usuarioLogado,
+            @PathVariable Long id,
+            @Valid @RequestBody dev.shiori.dto.catalogo.VincularObraRequest request) {
+        ItemCatalogoResponse response = itemCatalogoService.vincularObra(
+                usuarioLogado.getId(), id, request.obraId(), request.sincronizarOuPadrao());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/atualizar-meta")
+    public ResponseEntity<ItemCatalogoResponse> atualizarMetaCapitulos(
+            @CurrentUser UsuarioPrincipal usuarioLogado,
+            @PathVariable Long id) {
+        ItemCatalogoResponse response = itemCatalogoService.atualizarMetaNovosCapitulos(usuarioLogado.getId(), id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/exportar")
+    public ResponseEntity<dev.shiori.dto.catalogo.EstanteExportDTO> exportarEstante(
+            @CurrentUser UsuarioPrincipal usuarioLogado) {
+        dev.shiori.dto.catalogo.EstanteExportDTO response = itemCatalogoService.exportarEstante(usuarioLogado.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/importar")
+    public ResponseEntity<java.util.Map<String, Object>> importarEstante(
+            @CurrentUser UsuarioPrincipal usuarioLogado,
+            @Valid @RequestBody dev.shiori.dto.catalogo.EstanteImportRequest request) {
+        int totalImportados = itemCatalogoService.importarEstante(usuarioLogado.getId(), request);
+        return ResponseEntity.ok(java.util.Map.of("mensagem", "Estante importada com sucesso", "totalImportados", totalImportados));
+    }
 }

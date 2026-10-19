@@ -78,6 +78,19 @@ public class HistoricoLeitura extends EntidadeBase {
         this.ultimaAtualizacao = LocalDateTime.now();
     }
 
+    public HistoricoLeitura(
+            ItemCatalogo itemCatalogo,
+            Double capituloInicial,
+            Double capituloFinal,
+            Double avaliacaoCiclo,
+            String anotacoes,
+            LocalDate dataLeitura) {
+        this(itemCatalogo, capituloInicial, capituloFinal, avaliacaoCiclo, anotacoes);
+        if (dataLeitura != null) {
+            this.dataLeitura = dataLeitura;
+        }
+    }
+
     public Double calcularTamanhoCiclo() {
         return this.capituloFinal - this.capituloInicial;
     }

@@ -1,124 +1,133 @@
-# Shiori API 栞
+# Shiori API 栞 (Hub Oficial)
 
-> Back-end robusto e API REST da Catálogo de Leituras **Shiori**, focada em acompanhamento de ciclos de leitura, curadoria comunitária de obras literárias e privacidade por design (Privacy by Design).
+[![Build & Tests](https://img.shields.io/badge/tests-244%20passed-brightgreen.svg)](pom.xml)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-25%20LTS-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Version](https://img.shields.io/badge/version-0.0.12--alpha-blue.svg)](pom.xml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
-
-## 📖 Visão Geral
-
-O **Shiori API** é o coração da plataforma Shiori. Ele provê serviços de alta performance para gerenciar acervos literários (livros, mangás, light novels, webcomics, manhwas e manhuas), rastreamento granular de ciclos de leitura, teia social de conexões entre leitores, moderação comunitária auditável e total conformidade com a LGPD (Lei Geral de Proteção de Dados).
-
-### Principais Funcionalidades
-
-- **Catálogo Global Curado:** Governança com Regra de Ouro (obras oficiais imutáveis para usuários comuns), pipeline de submissão comunitária e canal de crowdsourcing para sugestões de edição com auditoria administrativa.
-- **Estante Pessoal & Ciclos Elásticos:** Rastreamento de progresso de leitura, re-leituras através de ciclos elásticos (`HistoricoLeitura`) e links de leitura estritamente privados e isolados na estante do usuário.
-- **Taxonomia & Folksonomia:** Gêneros canônicos oficiais e tags livres da comunidade com sistema de votação líquida (upvotes/downvotes).
-- **Interações Sociais & Feed:** Timeline assíncrona desnormalizada, conexões mútuas e comentários com máscara anti-spoiler e moderação por denúncias.
-- **Segurança & Privacy by Design (LGPD/ANPD):** Encriptação simétrica de e-mails em repouso no PostgreSQL via AES-256, hash irreversível de senhas com BCrypt, consentimento granular de cookies com trilha de auditoria e rotina de direito ao esquecimento com anonimização total de dados pessoais.
+> Back-end robusto, API REST stateless de alta performance e Hub de catalogação do ecossistema **Shiori**. Desenvolvido com foco absoluto em **Soberania do Leitor**, **Privacidade por Design (Privacy by Design)**, desacoplamento arquitetural e resiliência contra censura.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 📖 Visão Geral do Ecossistema
 
-- **Linguagem:** Java 25 (OpenJDK 27 runtime)
-- **Framework:** Spring Boot 4.x
-  - Spring Web (RESTful API)
-  - Spring Data JPA / Hibernate 7
-  - Spring Security (Autenticação Stateless e Autorização RBAC)
-  - Spring Validation (Bean Validation)
-- **Banco de Dados:** PostgreSQL (Produção / Docker) e H2 in-memory (Testes automatizados)
-- **Armazenamento de Objetos (Storage):** Armazenamento Compatível com S3 (AWS, R2, MinIO) para avatares, capas e mídias estáticas
-- **Respostas de Erro:** RFC 9457 (`ProblemDetail`)
-- **SDK de Armazenamento:** AWS Java SDK v2 (S3)
-- **Gerenciador de Dependências:** Apache Maven com Maven Wrapper
+O **Shiori API** atua como o Hub do ecossistema Shiori:
+1. **Governança Comunitária do Catálogo:** Metadados enciclopédicos de obras literárias (mangás, webtoons, manhwas, light novels e livros) mantidos de forma auditável.
+2. **Soberania Absoluta da Estante:** A estante do leitor (`ItemCatalogo`) armazena snapshots locais autônomos. Se uma obra for removida ou sofrer DMCA no catálogo global, a estante do leitor **permanece 100% intacta e funcional**.
+3. **Privacidade e Criptografia em Repouso:** URLs confidenciais de leitura são cifradas via **AES-256-GCM** antes de atingirem o banco de dados.
+4. **Clientes Web Desacoplados:** Suporte dinâmico e flexível a CORS (`CORS_ALLOWED_ORIGINS`), permitindo que instâncias independentes do cliente web (`shiori-web`) ou apps mobile consumam o Hub sem restrições.
+5. **Padronização RFC 9457:** Respostas de erro padronizadas sob o MIME type `application/problem+json` (`ProblemDetail`).
 
 ---
 
-## 🏗️ Arquitetura do Sistema
+## 🛠️ Stack Tecnológica
 
-A arquitetura do Shiori segue os princípios de **Clean Architecture** e **Domain-Driven Design (DDD)**, dividida em módulos desacoplados:
-
-1. **Identidade, Consentimento & Onboarding:** Entidade `Usuario`, gestão de `Role` (User, Curador, Admin) e registro legal auditável em `ConsentimentoUsuario`.
-2. **Catálogo Canônico & Governança:** Entidades `Obra`, `Genero`, `Tag`, `VotoTag` e fluxo de sugestões de alteração em `SugestaoEdicaoObra`.
-3. **Catálogo Pessoal (Estante):** `ItemCatalogo` e `HistoricoLeitura`, garantindo isolamento absoluto de metadados privados.
-4. **Social & Moderação:** `ConexaoUsuario`, `AtividadeFeed`, `Comentario`, `DenunciaComentario` e `DenunciaObra`.
-5. **Visão de Futuro (Modelo Federado):** Arquitetura preparada para evolução em protocolo federado descentralizado entre servidores autônomos utilizando UUIDs públicos.
+| Camada | Tecnologia | Descrição |
+|:---|:---|:---|
+| **Linguagem** | Java 25 LTS | OpenJDK com modern switch expressions, records e virtual threads |
+| **Framework** | Spring Boot 4.x | Ecossistema maduro com Spring Security, Data JPA e Actuator |
+| **Persistência** | PostgreSQL 16+ | Modelagem relacional estrita com índices otimizados |
+| **Testes** | JUnit 5 + Mockito + AssertJ | Testes unitários e de integração determinísticos (H2 in-memory) |
+| **Criptografia** | AES-256-GCM / BCrypt | Proteção de dados confidenciais e credenciais de acesso |
+| **Storage S3** | AWS SDK v2 | Suporte compatível com Cloudflare R2, MinIO e AWS S3 |
+| **Documentação** | RFC 9457 / Markdown | Documentação aberta na pasta `docs/` |
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## 🚀 Como Executar Localmente
 
 ### Pré-requisitos
-
-- Java Development Kit (JDK 25 ou superior)
-- Git
-- Docker & Docker Compose (opcional, para instâncias locais de banco de dados e S3)
+- **JDK 25** instalado e configurado no `JAVA_HOME`.
+- **Git** para clonagem do repositório.
+- **Docker** e Docker Compose (opcional, para instâncias locais de PostgreSQL).
 
 ### Passo a Passo
 
-1. **Clone o repositório:**
+1. **Clonar o repositório:**
    ```bash
-   git clone https://github.com/WiltonGabriel/shiori.git
-   cd shiori
+   git clone https://github.com/wiltongabriel/shiori-api.git
+   cd shiori-api
    ```
 
-2. **Configure as Variáveis de Ambiente:**
-   Copie o arquivo de exemplo `.env.example` para `.env` e ajuste as variáveis para o seu ambiente:
+2. **Configurar as variáveis de ambiente:**
    ```bash
    cp .env.example .env
    ```
+   *(Ajuste as credenciais locais conforme seu ambiente).*
 
-   Principais variáveis configuráveis:
-   - `PORT`: Porta HTTP da aplicação (padrão `8080`).
-   - `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`: Conexão com o banco PostgreSQL.
-   - `SHIORI_CRYPTO_KEY`: Chave simétrica AES-256 (gerada via `openssl rand -hex 32`).
-   - `JWT_SECRET`: Chave para assinatura de tokens JWT (mínimo de 256 bits).
-   - `S3_ENDPOINT`: URL base do serviço S3 compatível (ex: `http://localhost:9000` ou endpoint AWS/R2).
-   - `S3_ACCESS_KEY`: Access Key para autenticação S3.
-   - `S3_SECRET_KEY`: Secret Key para autenticação S3.
-   - `S3_REGION`: Região S3 (ex: `us-east-1`).
-   - `S3_BUCKET_NAME`: Nome do bucket para armazenamento de mídias (ex: `shiori-media`).
-
-3. **Execute os Testes Automatizados:**
-   Valide se o ambiente local compila e passa na suíte completa de testes:
+3. **Executar a suíte de testes automatizados:**
    ```bash
-   ./mvnw clean test
+   # Windows
+   .\mvnw.cmd test
+
+   # Linux / macOS
+   ./mvnw test
    ```
 
-4. **Inicie a Aplicação:**
+4. **Iniciar a aplicação em modo de desenvolvimento:**
    ```bash
+   # Windows
+   .\mvnw.cmd spring-boot:run
+
+   # Linux / macOS
    ./mvnw spring-boot:run
    ```
+   A API estará disponível em: `http://localhost:8080`.
 
-A API estará acessível por padrão em `http://localhost:8080`.
-
----
-
-## 📚 Documentação Pública e Guia de Integração (Open Source)
-
-Se você é um desenvolvedor construindo um front-end alternativo (Web, Mobile, Desktop ou CLI) ou integrando bots/ferramentas externas com a Shiori API, consulte o nosso guia detalhado com arquitetura, autenticação Bearer JWT, estrutura de erros RFC 9457 e catálogo de endpoints:
-
-📖 **[Guia Completo de Integração com a Shiori API](docs/API_INTEGRATION_GUIDE.md)**
+5. **Testar endpoint de saúde (Health Check):**
+   ```bash
+   curl http://localhost:8080/actuator/health
+   ```
 
 ---
 
-## 🐳 Execução via Docker e Docker Compose
+## ⚙️ Variáveis de Ambiente (`.env.example`)
 
-Para subir o back-end em container utilizando o Docker Compose de produção:
+A API lê sua configuração a partir de variáveis de ambiente. Um arquivo de modelo `.env.example` é fornecido na raiz:
 
-```bash
-docker compose up -d
-docker compose logs -f shiori-api
+```env
+# Porta e Perfil
+PORT=8080
+SPRING_PROFILES_ACTIVE=dev
+
+# Banco de Dados PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=shiori
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# Autenticação JWT (mínimo 256 bits)
+JWT_SECRET=super_secret_jwt_key_shiori_minimum_32_bytes_long!
+JWT_EXPIRATION=86400000
+
+# CORS Dinâmico para Clientes Desacoplados (* ou domínios específicos)
+CORS_ALLOWED_ORIGINS=*
+
+# Chave Criptográfica AES-256 para URLs de Leitura
+SHIORI_CRYPTO_SECRET_KEY=bXlfc3VwZXJfc2VjcmV0X2tleV8zMl9ieXRlc19sb25nIQ==
 ```
 
 ---
 
-## 🛡️ Segurança e Proteção de Dados
+## 📚 Documentação Técnica Aprofundada
 
-Para relatar vulnerabilidades ou dúvidas sobre proteção de dados, por favor abra uma issue de segurança ou entre em contato com os mantenedores. Consulte nossa documentação de conformidade e as diretrizes do projeto.
+Documentos detalhados estão disponíveis na pasta [`docs/`](docs/):
+
+- 🏛️ **[Arquitetura do Sistema](docs/ARQUITETURA.md):** Segregação de camadas, DDD, Princípio da Responsabilidade Única (SRP), snapshots de soberania e modelo criptográfico.
+- 🔌 **[Guia de Integração de Clientes](docs/INTEGRACAO_CLIENTE.md):** Manual completo de endpoints públicos, ciclo de vida de autenticação JWT, cabeçalhos HTTP e handshake mesh.
+- 🚢 **[Deploy GitOps & Infraestrutura](docs/DEPLOY_GITOPS.md):** Esteira de CI/CD automatizada, Portainer, variáveis de produção e diretrizes restritas de acesso SSH operacional.
+
+---
+
+## 🛡️ Infraestrutura e Acesso Operacional
+
+- **Esteira GitOps:** As implantações em produção são automatizadas pelo **Portainer** acionado pela esteira do GitHub Actions a cada commit na branch `main`.
+- **Acesso SSH Restrito:** O acesso operacional via SSH (`ubuntu@100.127.79.49` via Tailscale) é estritamente restrito para auditoria de infraestrutura e gestão de containers em `/srv/services/shiori`. Nenhuma modificação manual de código é permitida diretamente em produção.
 
 ---
 
 ## 📄 Licença
 
-Este projeto é software de código aberto licenciado sob os termos da licença [MIT](LICENSE).
+Este projeto é software livre licenciado sob os termos da licença [MIT](LICENSE).

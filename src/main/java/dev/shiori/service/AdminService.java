@@ -61,6 +61,27 @@ public class AdminService {
     private final AdminIntegracaoService integracaoService;
     private final AdminConfigService configService;
     private final AdminAuditoriaService auditoriaService;
+    private final PareamentoService pareamentoService;
+    private final FederacaoService federacaoService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AdminService(AdminDashboardService dashboardService,
+                        AdminModeracaoService moderacaoService,
+                        AdminCuradoriaService curadoriaService,
+                        AdminIntegracaoService integracaoService,
+                        AdminConfigService configService,
+                        AdminAuditoriaService auditoriaService,
+                        PareamentoService pareamentoService,
+                        FederacaoService federacaoService) {
+        this.dashboardService = dashboardService;
+        this.moderacaoService = moderacaoService;
+        this.curadoriaService = curadoriaService;
+        this.integracaoService = integracaoService;
+        this.configService = configService;
+        this.auditoriaService = auditoriaService;
+        this.pareamentoService = pareamentoService;
+        this.federacaoService = federacaoService;
+    }
 
     public AdminService(AdminDashboardService dashboardService,
                         AdminModeracaoService moderacaoService,
@@ -68,12 +89,7 @@ public class AdminService {
                         AdminIntegracaoService integracaoService,
                         AdminConfigService configService,
                         AdminAuditoriaService auditoriaService) {
-        this.dashboardService = dashboardService;
-        this.moderacaoService = moderacaoService;
-        this.curadoriaService = curadoriaService;
-        this.integracaoService = integracaoService;
-        this.configService = configService;
-        this.auditoriaService = auditoriaService;
+        this(dashboardService, moderacaoService, curadoriaService, integracaoService, configService, auditoriaService, null, null);
     }
 
     // --- Dashboard & Métricas ---
@@ -218,5 +234,39 @@ public class AdminService {
     @Transactional(readOnly = true)
     public Page<RegistroAuditoriaResponse> listarAuditoria(Pageable pageable, Long adminId) {
         return auditoriaService.listarAuditoria(pageable, adminId);
+    }
+
+    // --- Pareamento de Instâncias ---
+    @Transactional(readOnly = true)
+    public Page<dev.shiori.dto.hub.PareamentoResponse> listarPareamentos(dev.shiori.domain.enums.StatusPareamento status, Pageable pageable, Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        return pareamentoService.listarInstancias(status, pageable);
+    }
+
+    public dev.shiori.dto.hub.PareamentoResponse decidirPareamento(Long id, dev.shiori.dto.hub.DecisaoPareamentoRequest request, Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        return pareamentoService.decidirPareamento(id, request);
+    }
+
+    // --- Federação de Hubs (Mesh) ---
+    @Transactional(readOnly = true)
+    public java.util.List<dev.shiori.dto.federacao.NoFederadoResponse> listarNosFederados(Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        return federacaoService.listarNos();
+    }
+
+    public dev.shiori.dto.federacao.NoFederadoResponse cadastrarNoFederado(dev.shiori.dto.federacao.NoFederadoRequest request, Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        return federacaoService.cadastrarNo(request);
+    }
+
+    public dev.shiori.dto.federacao.NoFederadoResponse alternarStatusNoFederado(Long id, boolean ativo, Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        return federacaoService.alternarStatusNo(id, ativo);
+    }
+
+    public void removerNoFederado(Long id, Long adminId) {
+        auditoriaService.obterEValidarAdmin(adminId);
+        federacaoService.removerNo(id);
     }
 }
