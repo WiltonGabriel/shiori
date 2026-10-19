@@ -1,6 +1,5 @@
 package dev.shiori.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -506,9 +505,8 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public boolean isFeatureFlagAtiva(String chave) {
-        return featureFlagRepository.findByChaveIgnoreCase(chave)
-                .map(FeatureFlag::isAtivado)
-                .orElse(false);
+        Optional<FeatureFlag> flagOpt = featureFlagRepository.findByChaveIgnoreCase(chave);
+        return flagOpt.isPresent() && flagOpt.get().isAtivado();
     }
 
     // ==========================================
@@ -541,10 +539,14 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public List<BroadcastResponse> listarBroadcastsAtivos() {
-        return broadcastSistemaRepository.findByAtivoTrueOrderByDataCriacaoDesc().stream()
-                .filter(BroadcastSistema::isVigente)
-                .map(BroadcastResponse::deEntidade)
-                .toList();
+        List<BroadcastSistema> broadcasts = broadcastSistemaRepository.findByAtivoTrueOrderByDataCriacaoDesc();
+        List<BroadcastResponse> vigentes = new ArrayList<>();
+        for (BroadcastSistema broadcast : broadcasts) {
+            if (broadcast.isVigente()) {
+                vigentes.add(BroadcastResponse.deEntidade(broadcast));
+            }
+        }
+        return vigentes;
     }
 
     public void desativarBroadcast(Long id, Long adminId) {

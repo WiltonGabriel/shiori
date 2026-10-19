@@ -59,9 +59,18 @@ class UsuarioRepositoryTest {
         usuarioRepository.save(u2);
 
         Page<Usuario> ativos = usuarioRepository.findByAtivoTrue(PageRequest.of(0, 10));
-        assertThat(ativos.getContent()).extracting(Usuario::getEmail)
-                .contains("u1@shiori.dev")
-                .doesNotContain("u2@shiori.dev");
+        boolean temU1Ativo = false;
+        boolean temU2Ativo = false;
+        for (Usuario u : ativos.getContent()) {
+            if ("u1@shiori.dev".equals(u.getEmail())) {
+                temU1Ativo = true;
+            }
+            if ("u2@shiori.dev".equals(u.getEmail())) {
+                temU2Ativo = true;
+            }
+        }
+        assertThat(temU1Ativo).isTrue();
+        assertThat(temU2Ativo).isFalse();
 
         Page<Usuario> roles = usuarioRepository.findByRole(Role.ROLE_USER, PageRequest.of(0, 10));
         assertThat(roles.getTotalElements()).isGreaterThanOrEqualTo(2);

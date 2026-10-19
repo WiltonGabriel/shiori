@@ -41,6 +41,12 @@
       "type": "java.lang.String",
       "description": "Nome do bucket S3 padrão para mídias.",
       "defaultValue": "shiori-media"
+    },
+    {
+      "name": "shiori.admin.default-password",
+      "type": "java.lang.String",
+      "description": "Senha padrão para o bootstrap inicial da conta Master sys_overseer.",
+      "defaultValue": ""
     }
   ]
 }

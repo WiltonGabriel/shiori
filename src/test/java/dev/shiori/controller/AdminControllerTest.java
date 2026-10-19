@@ -52,7 +52,6 @@ class AdminControllerTest {
     private MockMvc mockMvc;
     private String tokenAdmin;
     private String tokenUsuarioComum;
-    private Long adminId;
     private Long usuarioComumId;
     private Long obraPrincipalId;
     private Long obraDuplicadaId;
@@ -67,7 +66,6 @@ class AdminControllerTest {
         Usuario admin = new Usuario("admin.controller@shiori.dev", "senhaForte123", "admin_controller");
         admin.promoverPara(Role.ROLE_ADMIN);
         admin = usuarioRepository.save(admin);
-        adminId = admin.getId();
         tokenAdmin = jwtTokenProvider.gerarToken(admin);
 
         // 2. Cria Usuário Comum (ROLE_USER)

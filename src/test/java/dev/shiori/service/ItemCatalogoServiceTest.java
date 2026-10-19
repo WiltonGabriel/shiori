@@ -28,7 +28,6 @@ import dev.shiori.domain.enums.TipoAtividadeFeed;
 import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.enums.Visibilidade;
 import dev.shiori.domain.event.AtividadeLeituraEvent;
-import dev.shiori.domain.exception.RecursoNaoEncontradoException;
 import dev.shiori.domain.exception.RegraDeNegocioException;
 import dev.shiori.domain.model.ItemCatalogo;
 import dev.shiori.domain.model.Obra;
