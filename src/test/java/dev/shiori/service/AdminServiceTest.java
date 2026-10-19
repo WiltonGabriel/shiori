@@ -1,5 +1,12 @@
 package dev.shiori.service;
 
+import dev.shiori.service.admin.AdminAuditoriaService;
+import dev.shiori.service.admin.AdminConfigService;
+import dev.shiori.service.admin.AdminCuradoriaService;
+import dev.shiori.service.admin.AdminDashboardService;
+import dev.shiori.service.admin.AdminIntegracaoService;
+import dev.shiori.service.admin.AdminModeracaoService;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -124,7 +131,6 @@ class AdminServiceTest {
     @Mock
     private ProvedorIntegracaoFactory provedorIntegracaoFactory;
 
-    @InjectMocks
     private AdminService adminService;
 
     private Usuario admin;
@@ -134,6 +140,15 @@ class AdminServiceTest {
 
     @BeforeEach
     void setUp() {
+        AdminAuditoriaService auditoriaService = new AdminAuditoriaService(usuarioRepository, registroAuditoriaRepository);
+        AdminDashboardService dashboardService = new AdminDashboardService(auditoriaService, usuarioRepository, obraRepository, itemCatalogoRepository, sugestaoEdicaoObraRepository, denunciaComentarioRepository, denunciaObraRepository);
+        AdminModeracaoService moderacaoService = new AdminModeracaoService(auditoriaService, usuarioRepository, denunciaComentarioRepository, denunciaObraRepository);
+        AdminCuradoriaService curadoriaService = new AdminCuradoriaService(auditoriaService, obraRepository, itemCatalogoRepository, comentarioRepository, sugestaoEdicaoObraRepository, atividadeFeedRepository, generoRepository, tagRepository, votoTagRepository);
+        AdminIntegracaoService integracaoService = new AdminIntegracaoService(auditoriaService, provedorIntegracaoRepository, provedorIntegracaoFactory);
+        AdminConfigService configService = new AdminConfigService(auditoriaService, featureFlagRepository, broadcastSistemaRepository);
+
+        adminService = new AdminService(dashboardService, moderacaoService, curadoriaService, integracaoService, configService, auditoriaService);
+
         admin = new Usuario("admin@shiori.dev", "hash_senha", "sys_overseer");
         ReflectionTestUtils.setField(admin, "id", 1L);
         admin.promoverPara(Role.ROLE_ADMIN);
