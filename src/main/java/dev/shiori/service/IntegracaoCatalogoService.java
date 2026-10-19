@@ -96,10 +96,19 @@ public class IntegracaoCatalogoService {
             throw new RegraDeNegocioException("Limite diário esgotado para o provedor " + codigoProvedor);
         }
 
-        ClienteIntegracaoExterna cliente = provedorIntegracaoFactory.obterCliente(codigoProvedor);
-        IntegracaoMetadadosObra metadados = cliente.buscarObraPorIdExterno(provedor, idExterno);
-        provedorIntegracaoRepository.save(provedor);
-
-        return metadados;
+        try {
+            ClienteIntegracaoExterna cliente = provedorIntegracaoFactory.obterCliente(codigoProvedor);
+            IntegracaoMetadadosObra metadados = cliente.buscarObraPorIdExterno(provedor, idExterno);
+            provedorIntegracaoRepository.save(provedor);
+            return metadados;
+        } catch (RegraDeNegocioException | RecursoNaoEncontradoException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("INTEGRACAO: Falha ao consultar obra '{}' no provedor '{}': {}", idExterno, codigoProvedor, e.getMessage());
+            throw new dev.shiori.domain.exception.IntegracaoExternaException(
+                    "O provedor " + codigoProvedor + " está temporariamente indisponível. Tente novamente em instantes.",
+                    org.springframework.http.HttpStatus.BAD_GATEWAY
+            );
+        }
     }
 }

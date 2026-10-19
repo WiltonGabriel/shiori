@@ -153,18 +153,44 @@ public class OpenLibraryIntegracaoClient implements ClienteIntegracaoExterna {
                         String idExterno = rawKey.replace("/works/", "");
                         String titulo = doc.path("title").asText(termo);
 
-                        String autor = "";
-                        if (doc.has("author_name") && doc.get("author_name").isArray() && !doc.get("author_name").isEmpty()) {
-                            autor = doc.get("author_name").get(0).asText();
+                        // Autores e Créditos
+                        List<String> autores = new ArrayList<>();
+                        if (doc.has("author_name") && doc.get("author_name").isArray()) {
+                            for (JsonNode a : doc.get("author_name")) {
+                                if (autores.size() < 4) autores.add(a.asText());
+                            }
+                        }
+                        String autorPrincipal = autores.isEmpty() ? "" : autores.get(0);
+                        String autoresStr = String.join(", ", autores);
+
+                        // ISBN
+                        String isbn = null;
+                        if (doc.has("isbn") && doc.get("isbn").isArray() && !doc.get("isbn").isEmpty()) {
+                            isbn = doc.get("isbn").get(0).asText();
                         }
 
+                        // Capa via Open Library Covers API (ID ou ISBN)
                         String capaUrl = null;
                         if (doc.has("cover_i") && doc.get("cover_i").isNumber()) {
                             long coverId = doc.get("cover_i").asLong();
                             capaUrl = "https://covers.openlibrary.org/b/id/" + coverId + "-L.jpg";
+                        } else if (isbn != null && !isbn.isBlank()) {
+                            capaUrl = "https://covers.openlibrary.org/b/isbn/" + isbn + "-L.jpg";
                         }
 
                         Integer paginas = doc.has("number_of_pages_median") ? doc.get("number_of_pages_median").asInt() : null;
+
+                        // Sinopse ou frase inicial
+                        String sinopse = "";
+                        if (doc.has("first_sentence") && doc.get("first_sentence").isArray() && !doc.get("first_sentence").isEmpty()) {
+                            sinopse = doc.get("first_sentence").get(0).asText();
+                        }
+                        if (sinopse.isBlank()) {
+                            StringBuilder sb = new StringBuilder("Livro catalogado na Open Library.");
+                            if (!autoresStr.isBlank()) sb.append(" Autoria: ").append(autoresStr).append(".");
+                            if (isbn != null) sb.append(" ISBN: ").append(isbn).append(".");
+                            sinopse = sb.toString();
+                        }
 
                         List<String> generos = new ArrayList<>();
                         if (doc.has("subject") && doc.get("subject").isArray()) {
@@ -175,7 +201,8 @@ public class OpenLibraryIntegracaoClient implements ClienteIntegracaoExterna {
                         if (generos.isEmpty()) generos.add("Literatura");
 
                         List<String> tags = new ArrayList<>();
-                        if (!autor.isBlank()) tags.add("Autor: " + autor);
+                        if (!autoresStr.isBlank()) tags.add("Autor: " + autoresStr);
+                        if (isbn != null) tags.add("ISBN: " + isbn);
                         if (doc.has("first_publish_year")) {
                             tags.add("Ano: " + doc.get("first_publish_year").asText());
                         }
@@ -184,8 +211,8 @@ public class OpenLibraryIntegracaoClient implements ClienteIntegracaoExterna {
                                 CODIGO,
                                 idExterno,
                                 titulo,
-                                !autor.isBlank() ? titulo + " (" + autor + ")" : titulo,
-                                "Livro publicado catalogado na Open Library. Autor: " + (autor.isBlank() ? "Desconhecido" : autor),
+                                !autorPrincipal.isBlank() ? titulo + " (" + autorPrincipal + ")" : titulo,
+                                sinopse,
                                 capaUrl,
                                 paginas,
                                 1,
@@ -208,13 +235,13 @@ public class OpenLibraryIntegracaoClient implements ClienteIntegracaoExterna {
                     "OL-" + Math.abs(termo.hashCode() % 100000),
                     termo + " - Edição Livro",
                     termo,
-                    "Registro literário de livro obtido via Open Library Books.",
+                    "Registro literário de livro obtido via Open Library Books. ISBN: 9780000000000.",
                     "https://covers.openlibrary.org/b/id/8225261-L.jpg",
                     250,
                     1,
                     "LIVRO",
                     List.of("Literatura", "Ficção"),
-                    List.of("OpenLibrary", "Livro")
+                    List.of("OpenLibrary", "Livro", "ISBN: 9780000000000")
             ));
         }
 

@@ -98,5 +98,8 @@ public class AdminBootstrapRunner implements ApplicationRunner {
         if (!provedorIntegracaoRepository.existsByCodigoIgnoreCase("OPENLIBRARY")) {
             provedorIntegracaoRepository.save(new ProvedorIntegracao("OPENLIBRARY", "Open Library API", "https://openlibrary.org", null, 20000L));
         }
+        if (!provedorIntegracaoRepository.existsByCodigoIgnoreCase("KITSU")) {
+            provedorIntegracaoRepository.save(new ProvedorIntegracao("KITSU", "Kitsu API (Novels & Mangá)", "https://kitsu.io/api/edge", null, 15000L));
+        }
     }
 }

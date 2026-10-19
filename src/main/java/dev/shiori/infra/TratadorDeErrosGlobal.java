@@ -15,9 +15,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import dev.shiori.domain.exception.RecursoNaoEncontradoException;
 import dev.shiori.domain.exception.RegraDeNegocioException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestControllerAdvice
 public class TratadorDeErrosGlobal {
+
+    private static final Logger log = LoggerFactory.getLogger(TratadorDeErrosGlobal.class);
 
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ProblemDetail tratarRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
@@ -108,11 +112,25 @@ public class TratadorDeErrosGlobal {
         return problem;
     }
 
-    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
-    public ProblemDetail tratarTamanhoMaximoExcedido(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE, "O tamanho do arquivo enviado excede o limite máximo permitido.");
-        problem.setTitle("Arquivo Muito Grande");
-        problem.setType(URI.create("https://shiori.dev/erros/arquivo-muito-grande"));
+    @ExceptionHandler(dev.shiori.domain.exception.IntegracaoExternaException.class)
+    public ProblemDetail tratarIntegracaoExterna(dev.shiori.domain.exception.IntegracaoExternaException ex) {
+        log.warn("FALHA_INTEGRACAO_EXTERNA: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        problem.setTitle("Provedor Externo Indisponível");
+        problem.setType(URI.create("https://shiori.dev/erros/integracao-externa"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail tratarErroInesperado(Exception ex) {
+        log.error("ERRO_INESPERADO_GLOBAL: {}", ex.getMessage(), ex);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ocorreu uma instabilidade temporária ao processar sua solicitação. Por favor, tente novamente."
+        );
+        problem.setTitle("Instabilidade Temporária");
+        problem.setType(URI.create("https://shiori.dev/erros/interno"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
