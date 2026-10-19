@@ -1,6 +1,7 @@
 package dev.shiori.domain.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import dev.shiori.domain.exception.RegraDeNegocioException;
@@ -33,6 +34,9 @@ public class HistoricoLeitura extends EntidadeBase {
 
     @Column(nullable = false)
     private LocalDate dataLeitura;
+
+    @Column(name = "ultima_atualizacao", nullable = false)
+    private LocalDateTime ultimaAtualizacao;
 
     protected HistoricoLeitura() {
     }
@@ -71,6 +75,7 @@ public class HistoricoLeitura extends EntidadeBase {
         this.avaliacaoCiclo = avaliacaoCiclo;
         this.anotacoes = anotacoes;
         this.dataLeitura = LocalDate.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public Double calcularTamanhoCiclo() {
@@ -91,6 +96,16 @@ public class HistoricoLeitura extends EntidadeBase {
         }
         this.capituloFinal = novoCapituloFinal;
         this.dataLeitura = LocalDate.now();
+        this.ultimaAtualizacao = LocalDateTime.now();
+    }
+
+    public void atualizarAvaliacaoEAnotacoes(Double avaliacaoCiclo, String anotacoes) {
+        if (avaliacaoCiclo != null && (avaliacaoCiclo < 0.0 || avaliacaoCiclo > 10.0)) {
+            throw new RegraDeNegocioException("A avaliação do ciclo deve estar entre 0 e 10");
+        }
+        this.avaliacaoCiclo = avaliacaoCiclo;
+        this.anotacoes = anotacoes;
+        this.ultimaAtualizacao = LocalDateTime.now();
     }
 
     public ItemCatalogo getItemCatalogo() {
@@ -115,6 +130,10 @@ public class HistoricoLeitura extends EntidadeBase {
 
     public LocalDate getDataLeitura() {
         return dataLeitura;
+    }
+
+    public LocalDateTime getUltimaAtualizacao() {
+        return ultimaAtualizacao;
     }
 
     @Override
