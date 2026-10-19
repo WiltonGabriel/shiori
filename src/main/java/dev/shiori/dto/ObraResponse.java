@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import dev.shiori.domain.enums.StatusCatalogo;
+import dev.shiori.domain.enums.StatusPublicacao;
 import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.model.Obra;
 
@@ -17,6 +18,7 @@ public record ObraResponse(
         Double notaGeral,
         TipoObra tipoObra,
         StatusCatalogo statusCatalogo,
+        StatusPublicacao statusPublicacao,
         Long criadoPorUsuarioId,
         Set<String> generos,
         Set<String> tags) {
@@ -50,6 +52,7 @@ public record ObraResponse(
                 obra.getNotaGeral(),
                 obra.getTipoObra(),
                 obra.getStatusCatalogo(),
+                obra.getStatusPublicacao(),
                 obra.getCriadoPorUsuarioId(),
                 generos,
                 tags
