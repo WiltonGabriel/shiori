@@ -1,11 +1,32 @@
 package dev.shiori.repository;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import dev.shiori.domain.enums.StatusCatalogo;
+import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.model.Obra;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import dev.shiori.domain.enums.StatusLeitura;
-import java.util.List;
-
 public interface ObraRepository extends JpaRepository<Obra, Long> {
-    List<Obra> findByStatusLeitura(StatusLeitura statusLeitura);
+
+    @Override
+    @EntityGraph(attributePaths = {"generos", "tags"})
+    List<Obra> findAll();
+
+    @Override
+    @EntityGraph(attributePaths = {"generos", "tags"})
+    Optional<Obra> findById(Long id);
+
+    @EntityGraph(attributePaths = {"generos", "tags"})
+    List<Obra> findByStatusCatalogo(StatusCatalogo statusCatalogo);
+
+    @EntityGraph(attributePaths = {"generos", "tags"})
+    List<Obra> findByStatusCatalogoIn(Collection<StatusCatalogo> statusCatalogos);
+
+    @EntityGraph(attributePaths = {"generos", "tags"})
+    List<Obra> findByTipoObra(TipoObra tipoObra);
 }

@@ -1,27 +1,58 @@
 package dev.shiori.dto;
 
-import java.util.List;
-import dev.shiori.domain.enums.StatusLeitura;
-import dev.shiori.domain.enums.StatusObra;
+import java.util.HashSet;
+import java.util.Set;
+
+import dev.shiori.domain.enums.StatusCatalogo;
+import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.model.Obra;
 
-public record ObraResponse(Long id, String tituloPrincipal, String tituloOriginal, String capaUrl,
-        String sinopse, Double notaGeral, StatusObra statusObra, StatusLeitura statusLeitura,
-        Double avaliacaoPessoal, Double mediaAvaliacaoCiclos, Double progressoAtual,
-        List<HistoricoCicloResponse> historicosLeitura) {
+public record ObraResponse(
+        Long id,
+        String tituloPrincipal,
+        String tituloOriginal,
+        String capaUrl,
+        String sinopse,
+        Integer totalCapitulosLancados,
+        Double notaGeral,
+        TipoObra tipoObra,
+        StatusCatalogo statusCatalogo,
+        Long criadoPorUsuarioId,
+        Set<String> generos,
+        Set<String> tags) {
+
     public static ObraResponse fromEntity(Obra obra) {
+        Set<String> generos = new HashSet<>();
+        if (obra.getGeneros() != null) {
+            for (var g : obra.getGeneros()) {
+                if (g != null && g.getNome() != null) {
+                    generos.add(g.getNome());
+                }
+            }
+        }
+
+        Set<String> tags = new HashSet<>();
+        if (obra.getTagsVisiveis() != null) {
+            for (var t : obra.getTagsVisiveis()) {
+                if (t != null && t.getNome() != null) {
+                    tags.add(t.getNome());
+                }
+            }
+        }
+
         return new ObraResponse(
                 obra.getId(),
                 obra.getTituloPrincipal(),
                 obra.getTituloOriginal(),
                 obra.getCapaUrl(),
                 obra.getSinopse(),
+                obra.getTotalCapitulosLancados(),
                 obra.getNotaGeral(),
-                obra.getStatusObra(),
-                obra.getStatusLeitura(),
-                obra.getAvaliacaoPessoal(),
-                obra.getMediaAvaliacaoCiclos(),
-                obra.getProgressoAtual(),
-                obra.getHistoricosLeitura().stream().map(HistoricoCicloResponse::fromEntity).toList());
+                obra.getTipoObra(),
+                obra.getStatusCatalogo(),
+                obra.getCriadoPorUsuarioId(),
+                generos,
+                tags
+        );
     }
 }

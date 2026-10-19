@@ -1,13 +1,12 @@
 package dev.shiori;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-// wilton me mamou
+
 @SpringBootTest
 class ShioriApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void contextLoads() {
+    }
 }
-// meu ovo

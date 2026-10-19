@@ -1,17 +1,23 @@
 package dev.shiori.domain.model;
 
-import dev.shiori.domain.exception.RegraDeNegocioException;
-
 import java.time.LocalDate;
+import java.util.Objects;
+
+import dev.shiori.domain.exception.RegraDeNegocioException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_historico_leitura")
 public class HistoricoLeitura extends EntidadeBase {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_catalogo_id", nullable = false)
+    private ItemCatalogo itemCatalogo;
 
     @Column(nullable = false)
     private Double capituloInicial;
@@ -28,48 +34,42 @@ public class HistoricoLeitura extends EntidadeBase {
     @Column(nullable = false)
     private LocalDate dataLeitura;
 
-    @ManyToOne
-    @JoinColumn(name = "obra_id", nullable = false)
-    private Obra obra;
-
     protected HistoricoLeitura() {
     }
 
     public HistoricoLeitura(
-            Obra obra,
+            ItemCatalogo itemCatalogo,
             Double capituloInicial,
             Double capituloFinal,
             Double avaliacaoCiclo,
             String anotacoes) {
-        if (obra == null) {
-            throw new RegraDeNegocioException("Obra é obrigatória");
+        if (itemCatalogo == null) {
+            throw new RegraDeNegocioException("O item do catálogo é obrigatório para registrar o histórico");
         }
         if (capituloInicial == null) {
-            throw new RegraDeNegocioException("Capitulo inicial é obrigatório");
+            throw new RegraDeNegocioException("O capítulo inicial é obrigatório");
         }
         if (capituloFinal == null) {
-            throw new RegraDeNegocioException("Capitulo final é obrigatório");
+            throw new RegraDeNegocioException("O capítulo final é obrigatório");
         }
 
         if (capituloInicial < 0.0) {
-            throw new RegraDeNegocioException(
-                    "O capítulo inicial não pode ser negativo");
+            throw new RegraDeNegocioException("O capítulo inicial não pode ser negativo");
         }
 
         if (capituloFinal <= capituloInicial) {
-            throw new RegraDeNegocioException(
-                    "O capítulo final deve ser maior que o inicial");
+            throw new RegraDeNegocioException("O capítulo final deve ser maior que o inicial");
         }
 
         if (avaliacaoCiclo != null && (avaliacaoCiclo < 0.0 || avaliacaoCiclo > 10.0)) {
             throw new RegraDeNegocioException("A avaliação do ciclo deve estar entre 0 e 10");
         }
 
+        this.itemCatalogo = itemCatalogo;
         this.capituloInicial = capituloInicial;
         this.capituloFinal = capituloFinal;
         this.avaliacaoCiclo = avaliacaoCiclo;
         this.anotacoes = anotacoes;
-        this.obra = obra;
         this.dataLeitura = LocalDate.now();
     }
 
@@ -93,6 +93,10 @@ public class HistoricoLeitura extends EntidadeBase {
         this.dataLeitura = LocalDate.now();
     }
 
+    public ItemCatalogo getItemCatalogo() {
+        return itemCatalogo;
+    }
+
     public Double getCapituloInicial() {
         return capituloInicial;
     }
@@ -113,7 +117,25 @@ public class HistoricoLeitura extends EntidadeBase {
         return dataLeitura;
     }
 
-    public Obra getObra() {
-        return obra;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HistoricoLeitura that = (HistoricoLeitura) o;
+        if (getId() != null && that.getId() != null) {
+            return getId().equals(that.getId());
+        }
+        return Objects.equals(itemCatalogo, that.itemCatalogo) &&
+                Objects.equals(capituloInicial, that.capituloInicial) &&
+                Objects.equals(capituloFinal, that.capituloFinal) &&
+                Objects.equals(dataLeitura, that.dataLeitura);
+    }
+
+    @Override
+    public int hashCode() {
+        if (getId() != null) {
+            return getId().hashCode();
+        }
+        return Objects.hash(itemCatalogo, capituloInicial, capituloFinal, dataLeitura);
     }
 }

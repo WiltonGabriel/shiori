@@ -1,34 +1,64 @@
-# Compiled class files and build artifacts
+# ===================================================================
+# BUILD ARTIFACTS & COMPILED CLASSES
+# ===================================================================
 target/
 *.class
 *.jar
 *.war
 *.ear
 *.nar
+build/
+out/
 
 # Maven Wrapper runtime
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# Log files
+# ===================================================================
+# LOGS & CRASH DUMPS
+# ===================================================================
 *.log
 logs/
-
-# JVM crash logs
 hs_err_pid*
 replay_pid*
 
-# Environment and sensitive configuration
+# ===================================================================
+# SECRETS, CREDENCIAIS E VARIÁVEIS DE AMBIENTE
+# ===================================================================
 .env
-*.env
 .env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.jks
 application-local.properties
 application-local.yml
 application-dev.properties
 application-dev.yml
 
-# OS artifacts (Windows, macOS, Linux)
+# ===================================================================
+# DOCUMENTAÇÃO PRIVADA E PALÁCIO DA MEMÓRIA DA IA
+# ===================================================================
+Docs/STATUS_MENTORIA.md
+docs/memory/
+Docs/memory/
+Docs/
+docs/
+
+# ===================================================================
+# INFRAESTRUTURA LOCAL, DOCKER & STORAGE DATA
+# ===================================================================
+minio-data/
+docker-compose.override.yml
+dump.rdb
+
+# ===================================================================
+# SISTEMA OPERACIONAL
+# ===================================================================
 .DS_Store
 Thumbs.db
 ehthumbs.db
@@ -38,7 +68,9 @@ desktop.ini
 *.swo
 .directory
 
-# IDEs
+# ===================================================================
+# IDES & EDITORES
+# ===================================================================
 # VS Code
 .vscode/
 *.code-workspace
@@ -48,7 +80,6 @@ desktop.ini
 *.iws
 *.iml
 *.ipr
-out/
 
 # Eclipse / STS
 .apt_generated
@@ -65,4 +96,3 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/

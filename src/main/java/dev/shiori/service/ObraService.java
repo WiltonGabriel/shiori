@@ -1,21 +1,19 @@
 package dev.shiori.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
-import dev.shiori.domain.model.Obra;
-import dev.shiori.domain.enums.StatusLeitura;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import dev.shiori.domain.enums.StatusCatalogo;
 import dev.shiori.domain.exception.RecursoNaoEncontradoException;
-
+import dev.shiori.domain.model.Obra;
 import dev.shiori.dto.ObraCadastroRequest;
-import dev.shiori.dto.NovoCicloRequest;
-import dev.shiori.dto.AtualizarLeituraRequest;
 import dev.shiori.dto.ObraResponse;
-
 import dev.shiori.repository.ObraRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class ObraService {
 
     private final ObraRepository obraRepository;
@@ -31,36 +29,37 @@ public class ObraService {
                 dados.tituloOriginal(),
                 dados.capaUrl(),
                 dados.sinopse(),
-                dados.notaGeral(),
-                dados.statusObra(),
-                dados.statusLeitura(),
-                dados.avaliacaoPessoal());
+                dados.totalCapitulosLancados(),
+                dados.tipoObra()
+        );
 
         Obra obraSalva = obraRepository.save(obra);
         return ObraResponse.fromEntity(obraSalva);
     }
 
     @Transactional
-    public ObraResponse registrarCiclo(Long obraId, NovoCicloRequest dados) {
+    public ObraResponse submeterAoCatalogoGlobal(Long obraId, Long usuarioId) {
         Obra obra = buscarObraPorId(obraId);
-
-        obra.registrarCicloLeitura(
-                dados.capituloAtingido(),
-                dados.nota(),
-                dados.anotacoes());
-
+        obra.submeterAoCatalogoGlobal(usuarioId);
         Obra obraSalva = obraRepository.save(obra);
         return ObraResponse.fromEntity(obraSalva);
     }
 
-    @Transactional(readOnly = true)
-    public List<ObraResponse> listarTodas(StatusLeitura statusFiltro) {
+    @Transactional
+    public ObraResponse promoverParaOficial(Long obraId) {
+        Obra obra = buscarObraPorId(obraId);
+        obra.promoverParaOficial();
+        Obra obraSalva = obraRepository.save(obra);
+        return ObraResponse.fromEntity(obraSalva);
+    }
+
+    public List<ObraResponse> listarTodas(StatusCatalogo statusFiltro) {
         List<Obra> obras;
 
         if (statusFiltro == null) {
             obras = obraRepository.findAll();
         } else {
-            obras = obraRepository.findByStatusLeitura(statusFiltro);
+            obras = obraRepository.findByStatusCatalogo(statusFiltro);
         }
 
         return obras.stream()
@@ -68,20 +67,18 @@ public class ObraService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    public List<ObraResponse> listarObrasDaHome() {
+        List<Obra> obras = obraRepository.findByStatusCatalogoIn(
+                List.of(StatusCatalogo.OFICIAL, StatusCatalogo.COMUNITARIO)
+        );
+        return obras.stream()
+                .map(ObraResponse::fromEntity)
+                .toList();
+    }
+
     public ObraResponse buscarPorId(Long obraId) {
         Obra obra = buscarObraPorId(obraId);
         return ObraResponse.fromEntity(obra);
-    }
-
-    @Transactional
-    public ObraResponse atualizarLeitura(Long obraId, AtualizarLeituraRequest dados) {
-        Obra obra = buscarObraPorId(obraId);
-
-        obra.atualizarDadosLeitura(dados.statusLeitura(), dados.avaliacaoPessoal());
-
-        Obra obraSalva = obraRepository.save(obra);
-        return ObraResponse.fromEntity(obraSalva);
     }
 
     @Transactional
@@ -89,7 +86,6 @@ public class ObraService {
         if (!obraRepository.existsById(obraId)) {
             throw new RecursoNaoEncontradoException("Obra não encontrada com ID: " + obraId);
         }
-
         obraRepository.deleteById(obraId);
     }
 
