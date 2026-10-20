@@ -2,7 +2,6 @@ package dev.shiori.domain.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -457,7 +456,7 @@ public class Usuario extends EntidadeBase {
         dados.put("totalItensEstante", this.estante.size());
         dados.put("totalConexoesEnviadas", this.conexoesEnviadas.size());
         dados.put("totalConexoesRecebidas", this.conexoesRecebidas.size());
-        dados.put("formatosPreferidos", this.getFormatosPreferidos().stream().map(TipoObra::name).toList());
+        dados.put("formatosPreferidos", this.getFormatosPreferidos().stream().map(tipo -> tipo.name()).toList());
         return dados;
     }
 

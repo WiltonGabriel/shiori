@@ -49,6 +49,7 @@ docs/memoria/
 # ===================================================================
 # CUSTOMIZAÇÕES LOCAIS DO AGENTE IA (SKILLS E REGRAS LOCAIS)
 # ===================================================================
+.agents
 .agents/
 AGENTS.md
 GEMINI.md

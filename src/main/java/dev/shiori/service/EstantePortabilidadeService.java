@@ -109,7 +109,7 @@ public class EstantePortabilidadeService {
             }
 
             Integer totalCaps = itemDto.totalCapitulos() != null
-                    ? itemDto.totalCapitulos().intValue()
+                    ? Integer.valueOf(itemDto.totalCapitulos().intValue())
                     : (obra != null ? obra.getTotalCapitulosLancados() : null);
             Integer totalVols = itemDto.totalVolumes() != null
                     ? itemDto.totalVolumes()

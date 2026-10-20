@@ -33,6 +33,7 @@ class TipoObraTest {
 
     @Test
     @DisplayName("Deve manter NOVEL como valor de enum deprecado para segurança no JPA e banco de dados")
+    @SuppressWarnings("deprecation")
     void deveManterNovelParaSegurancaJPA() {
         TipoObra legado = TipoObra.valueOf("NOVEL");
         assertThat(legado).isNotNull();

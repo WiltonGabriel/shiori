@@ -1,6 +1,5 @@
 package dev.shiori.service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -163,11 +162,11 @@ public class ObraService {
 
         // Não há resultados nos formatos permitidos, mas foram encontrados em outros formatos
         Set<TipoObra> formatosDetectados = todasCorrespondencias.stream()
-                .map(Obra::getTipoObra)
+                .map(o -> o.getTipoObra())
                 .collect(Collectors.toSet());
 
         String nomesFormatos = formatosDetectados.stream()
-                .map(TipoObra::getDescricao)
+                .map(t -> t.getDescricao())
                 .collect(Collectors.joining(", "));
 
         String mensagem = String.format(
@@ -204,7 +203,7 @@ public class ObraService {
             return null;
         }
         return usuarioRepository.findById(usuarioId)
-                .map(Usuario::getFormatosPreferidos)
+                .map(u -> u.getFormatosPreferidos())
                 .orElse(null);
     }
 }

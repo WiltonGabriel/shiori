@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import dev.shiori.domain.enums.StatusCatalogo;
 import dev.shiori.domain.enums.StatusLeitura;
 import dev.shiori.domain.enums.StatusPareamento;
 import dev.shiori.domain.enums.TipoObra;

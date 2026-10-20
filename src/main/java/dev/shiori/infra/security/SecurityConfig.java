@@ -87,7 +87,7 @@ public class SecurityConfig {
             configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
             List<String> origins = java.util.Arrays.stream(corsAllowedOrigins.split(","))
-                    .map(String::trim)
+                    .map(s -> s.trim())
                     .filter(s -> !s.isEmpty())
                     .toList();
             configuration.setAllowedOriginPatterns(origins);

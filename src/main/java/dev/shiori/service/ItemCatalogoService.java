@@ -1,7 +1,5 @@
 package dev.shiori.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -15,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import dev.shiori.domain.enums.StatusLeitura;
 import dev.shiori.domain.enums.TipoAtividadeFeed;
 import dev.shiori.domain.enums.TipoObra;
-import dev.shiori.domain.enums.Visibilidade;
 import dev.shiori.domain.event.AtividadeLeituraEvent;
 import dev.shiori.domain.exception.RecursoNaoEncontradoException;
 import dev.shiori.domain.exception.RegraDeNegocioException;

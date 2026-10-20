@@ -15,7 +15,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import dev.shiori.domain.enums.Role;
 import dev.shiori.domain.enums.StatusLeitura;
 import dev.shiori.domain.enums.TipoObra;
 import dev.shiori.domain.enums.Visibilidade;
